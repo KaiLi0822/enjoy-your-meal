@@ -66,7 +66,7 @@ const ExpandMore = styled((props: ExpandMoreProps) => {
   transition: theme.transitions.create("transform", {
     duration: theme.transitions.duration.shortest,
   }),
-  transform: expand ? "rotate(180deg)" : "rotate(0deg)",
+  transform: expand  ? "rotate(180deg)" : "rotate(0deg)",
 }));
 
 export default function MainContent() {
@@ -101,10 +101,7 @@ export default function MainContent() {
     <Box sx={{ display: "flex", flexDirection: "column", gap: 4 }}>
       <div>
         <Typography variant="h1" gutterBottom>
-          Blog
-        </Typography>
-        <Typography>
-          Stay in the loop with the latest about our products
+          Enjoy Your Meal
         </Typography>
       </div>
       <Box
@@ -216,7 +213,7 @@ export default function MainContent() {
                 <FavoriteIcon />
               </IconButton>
               <ExpandMore
-                expand={expanded}
+                expand={expanded && recipe.recipeId === expandRecipe}
                 onClick={() => handleExpandClick(recipe.recipeId)}
                 aria-expanded={expanded}
                 aria-label="show more"
