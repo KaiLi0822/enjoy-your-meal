@@ -75,7 +75,7 @@ export default function MainContent() {
 
   useEffect(() => {
     // Fetch the data from the server
-    axios.get("http://localhost:3000/api/data") // Replace with your API endpoint
+    axios.get("http://localhost:3000/api/recipes") // Replace with your API endpoint
       .then((response) => {
         setRecipes(response.data.data); // Update state with the "data" array
       })

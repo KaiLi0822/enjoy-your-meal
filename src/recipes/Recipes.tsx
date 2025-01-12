@@ -5,7 +5,7 @@ import MainContent from './components/MainContent';
 import Footer from './components/Footer';
 import AppTheme from '../shared-theme/AppTheme';
 
-export default function Blog(props: { disableCustomTheme?: boolean }) {
+export default function Recipes(props: { disableCustomTheme?: boolean }) {
   return (
     <AppTheme {...props}>
       <CssBaseline enableColorScheme />
