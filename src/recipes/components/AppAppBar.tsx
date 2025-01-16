@@ -1,4 +1,4 @@
-import * as React from "react";
+import { useState } from "react";
 import { alpha, styled } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import AppBar from "@mui/material/AppBar";
@@ -13,9 +13,9 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import RamenDiningIcon from "@mui/icons-material/RamenDining";
 import ColorModeIconDropdown from "../../shared-theme/ColorModeIconDropdown";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
-import { Select } from "@mui/material";
-import { Profile } from "./Profile"; 
+import { Profile } from "./Profile";
+import { Menus } from "./Menus";
+import { useAuthContext } from "../../contexts/AuthContext";
 
 const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   display: "flex",
@@ -32,26 +32,13 @@ const StyledToolbar = styled(Toolbar)(({ theme }) => ({
 }));
 
 export default function AppAppBar() {
-  const [open, setOpen] = React.useState(false);
-  const [userName, setUserName] = React.useState(""); // Store user info
+  const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuthContext();
 
   const toggleDrawer = (newOpen: boolean) => () => {
     setOpen(newOpen);
   };
-
-  const handleLogout = () => {
-    localStorage.clear(); // Clear user data
-    setUserName('');
-  };
-
-  useEffect(() => {
-    // Simulate fetching user info (replace with actual API call or local storage logic)
-    const userName = localStorage.getItem("userName");
-    if (userName) {
-      setUserName(userName);
-    }
-  }, []);
 
   return (
     <AppBar
@@ -67,9 +54,16 @@ export default function AppAppBar() {
       <Container maxWidth="lg">
         <StyledToolbar variant="dense" disableGutters>
           <Box
-            sx={{ flexGrow: 1, display: "flex", alignItems: "center", px: 0 }}
+            sx={{ flexGrow: 1, display: "flex", alignItems: "center", px: 4 }}
           >
             <RamenDiningIcon sx={{ color: "text.secondary" }} />
+            <Button
+              color="primary"
+              variant="text"
+              onClick={() => navigate("/")}
+            >
+              Home
+            </Button>
           </Box>
           <Box
             sx={{
@@ -78,11 +72,11 @@ export default function AppAppBar() {
               alignItems: "center",
             }}
           >
-            {userName ? (
-                            <>
-                            {/* <Menus menus={menus} onAddMenu={handleAddMenu} onDeleteMenu={handleDeleteMenu} /> */}
-                            <Profile userName={userName} onLogout={handleLogout} />
-                          </>
+            { isAuthenticated? (
+              <>
+                <Menus />
+                <Profile />
+              </>
             ) : (
               <>
                 <Button
@@ -136,11 +130,11 @@ export default function AppAppBar() {
                     <CloseRoundedIcon />
                   </IconButton>
                 </Box>
-                {userName ? (
-                     <>
-                     {/* <Menus menus={menus} onAddMenu={handleAddMenu} onDeleteMenu={handleDeleteMenu} /> */}
-                     <Profile userName={userName} onLogout={handleLogout} />
-                   </>
+                {isAuthenticated ? (
+                  <>
+                    <Menus />
+                    <Profile />
+                  </>
                 ) : (
                   <>
                     <MenuItem>

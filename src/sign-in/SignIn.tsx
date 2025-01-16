@@ -19,6 +19,8 @@ import AppTheme from '../shared-theme/AppTheme';
 import ColorModeSelect from '../shared-theme/ColorModeSelect';
 import RamenDiningIcon from '@mui/icons-material/RamenDining';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
@@ -90,29 +92,24 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
       password: data.get('password'),
       rememberMe: rememberMe
     };
-    console.log(requestBody)
-    try {
-      const response = await fetch('http://localhost:3000/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      });
+ try {
+    const response = await axios.post('/api/auth/login', 
+      requestBody,
+      { withCredentials: true }
+    );
 
-      if (response.ok) {
-        const result = await response.json();
-        localStorage.setItem("userName", result.user.name);
-        localStorage.setItem("accessToken", result.accessToken);
-        navigate("/");
-      } else {
-        const errorData = await response.json();
-        alert(errorData.message || 'Failed to sign in.');
-      }
-    } catch (error) {
-      console.error('Error during sign in:', error);
-      alert('An error occurred during sign in. Please try again.');
+    if (response.status === 200) {
+      const { accessToken } = response.data;
+      // Store session details in sessionStorage
+      sessionStorage.setItem('accessToken', accessToken);
+      navigate('/', { state: { auth: true } });
+    } else {
+      alert(response.data.message || 'Failed to sign in.');
     }
+  } catch (error) {
+    console.error('Error during sign in:', error);
+    alert('An error occurred during sign in. Please try again.');
+  }
   };
 
   const validateInputs = () => {

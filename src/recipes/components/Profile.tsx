@@ -1,40 +1,47 @@
-import React from 'react';
-import { Box, MenuItem, Select } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { Box, MenuItem, Select } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import PersonIcon from "@mui/icons-material/Person";
+import axios from "axios";
 
-interface ProfileProps {
-  userName: string;
-  onLogout: () => void;
-}
-
-export const Profile: React.FC<ProfileProps> = ({ userName, onLogout }) => {
+export const Profile = () => {
   const navigate = useNavigate();
+
+  const onLogout = async () => {
+    try {
+      await axios.post(
+        "/api/auth/logout",
+        {},
+        {
+          withCredentials: true, // Ensure cookies are included in the request
+        }
+      );
+      sessionStorage.clear(); // Clear token
+      navigate("/", { state: { auth: false } });
+    } catch (error) {
+      console.error("Error during logout:", error);
+    }
+  };
 
   return (
     <Select
       value=""
       onChange={(event) => {
-        if (event.target.value === 'logout') {
+        if (event.target.value === "logout") {
           onLogout();
-          navigate('/');
         }
       }}
       displayEmpty
       renderValue={() => (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Box
             sx={{
               width: 20,
               height: 20,
-              borderRadius: '50%',
-              bgcolor: 'primary.main',
-              color: 'white',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              display: "flex",
+              alignItems: "center",
             }}
           >
-            {userName.charAt(0).toUpperCase()}
+            <PersonIcon sx={{ color: "primary.main" }} />
           </Box>
         </Box>
       )}

@@ -18,6 +18,7 @@ import { GoogleIcon } from './CustomIcons';
 import ColorModeSelect from '../shared-theme/ColorModeSelect';
 import RamenDiningIcon from '@mui/icons-material/RamenDining';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -66,76 +67,69 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
   const [emailErrorMessage, setEmailErrorMessage] = React.useState('');
   const [passwordError, setPasswordError] = React.useState(false);
   const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
-  const [nameError, setNameError] = React.useState(false);
-  const [nameErrorMessage, setNameErrorMessage] = React.useState('');
   const [rememberMe, setRememberMe] = React.useState(false);
   const navigate = useNavigate();
 
-  const validateInputs = () => {
-    const email = document.getElementById('email') as HTMLInputElement;
-    const password = document.getElementById('password') as HTMLInputElement;
-    const name = document.getElementById('name') as HTMLInputElement;
+  const validateInputs = (email: string, password: string): boolean => {
+    let isValid = true;
 
-    if (!email.value || !/\S+@\S+\.\S+/.test(email.value)) {
+    if (!email || !/\S+@\S+\.\S+/.test(email)) {
       setEmailError(true);
       setEmailErrorMessage('Please enter a valid email address.');
+      isValid = false;
     } else {
       setEmailError(false);
       setEmailErrorMessage('');
     }
 
-    if (!password.value || password.value.length < 6) {
+    if (!password || password.length < 6) {
       setPasswordError(true);
       setPasswordErrorMessage('Password must be at least 6 characters long.');
+      isValid = false;
     } else {
       setPasswordError(false);
       setPasswordErrorMessage('');
     }
 
-    if (!name.value || name.value.length < 1) {
-      setNameError(true);
-      setNameErrorMessage('Name is required.');
-    } else {
-      setNameError(false);
-      setNameErrorMessage('');
-    }
+    return isValid;
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    validateInputs();
-    if (nameError || emailError || passwordError) {
+    const data = new FormData(event.currentTarget);
+    const email = data.get('email') as string;
+    const password = data.get('password') as string;
+
+    if (!validateInputs(email, password)) {
       return;
     }
-    const data = new FormData(event.currentTarget);
     const requestBody = {
-      name: data.get('name'),
       email: data.get('email'),
       password: data.get('password'),
       rememberMe: rememberMe
     };
-    console.log(requestBody)
     try {
-      const response = await fetch('http://localhost:3000/api/users/add', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      });
+      const response = await axios.post('/api/users', 
+        requestBody,
+        { withCredentials: true }
+      );
 
-      if (response.ok) {
-        const result = await response.json();
-        localStorage.setItem("userName", result.user.name);
-        localStorage.setItem("accessToken", result.accessToken);
-        navigate("/");
-      } else {
-        const errorData = await response.json();
-        alert(errorData.message || 'Failed to sign up.');
+      if (response.status === 200) {
+        const { accessToken } = response.data;
+        sessionStorage.setItem('accessToken', accessToken);
+        navigate("/", { state: { auth: true } });
       }
     } catch (error) {
-      console.error('Error during sign up:', error);
-      alert('An error occurred during sign up. Please try again.');
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 409) {
+          alert('Email is already registered.');
+        } else {
+          alert(error.response?.data?.message || 'An error occurred during sign up. Please try again.');
+        }
+      } else {
+        console.error('Unexpected error:', error);
+        alert('An unexpected error occurred. Please try again.');
+      }
     }
   };
 
@@ -159,20 +153,6 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
             sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
           >
             <FormControl>
-              <FormLabel htmlFor="name">Full name</FormLabel>
-              <TextField
-                // autoComplete="name"
-                name="name"
-                required
-                fullWidth
-                id="name"
-                placeholder="Jon Snow"
-                error={nameError}
-                helperText={nameErrorMessage}
-                color={nameError ? 'error' : 'primary'}
-              />
-            </FormControl>
-            <FormControl>
               <FormLabel htmlFor="email">Email</FormLabel>
               <TextField
                 required
@@ -180,7 +160,7 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
                 id="email"
                 placeholder="your@email.com"
                 name="email"
-                // autoComplete="email"
+                autoComplete="email"
                 variant="outlined"
                 error={emailError}
                 helperText={emailErrorMessage}
@@ -196,7 +176,7 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
                 placeholder="••••••"
                 type="password"
                 id="password"
-                // autoComplete="new-password"
+                autoComplete="new-password"
                 variant="outlined"
                 error={passwordError}
                 helperText={passwordErrorMessage}
@@ -204,7 +184,7 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
               />
             </FormControl>
             <FormControlLabel
-              control={<Checkbox value={rememberMe} color="primary" onChange={(e) => setRememberMe(e.target.checked)}/>}
+              control={<Checkbox checked={rememberMe} color="primary" onChange={(e) => setRememberMe(e.target.checked)}/>}
               label="Remember Me"
             />
             <Button
