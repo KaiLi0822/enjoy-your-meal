@@ -111,11 +111,6 @@ export default function MainContent() {
             <Grid size={{ xs: 12, md: 4 }} key={recipe.SK}>
               <Card>
                 <CardHeader
-                  avatar={
-                    <Avatar sx={{ bgcolor: red[500] }} aria-label="recipe">
-                      {recipe.PK.charAt(0)}
-                    </Avatar>
-                  }
                   title={recipe.name}
                 />
                 <CardMedia

@@ -10,23 +10,37 @@ import { apiAuthClient, apiClient } from "../utils/apiClients";
 
 export default function Recipes(props: { disableCustomTheme?: boolean }) {
   const { isAuthenticated, menu, setRecipes, setMenus } = useAuthContext(); // Access setIsAuthenticated from context
-
   React.useEffect(() => {
-    console.log("Recipes-useEffect");
-    const fetchRecipes = async () => {
-      // Add a loading to cover the await time
+    console.log("Fetching menus only once.");
+    const fetchMenus = async () => {
       try {
         if (isAuthenticated) {
           const response = await apiAuthClient.get("/users/menus");
           setMenus(response.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching menus:", error);
+      }
+    };
+
+    fetchMenus();
+  }, [isAuthenticated, setMenus]); // Fetch menus only when isAuthenticated changes
+
+  React.useEffect(() => {
+    console.log("Fetching recipes.");
+    const fetchRecipes = async () => {
+      try {
+        if (isAuthenticated) {
           if (menu === "") {
-            console.log("menu is default.")
+            console.log("menu is default.");
             const response = await apiAuthClient.get("/users/recipes");
             setRecipes(response.data.data);
           } else {
-            const encodedMenu = encodeURIComponent(menu)
-            console.log(`/users/${encodedMenu}/recipes`)
-            const response = await apiAuthClient.get(`/users/${encodedMenu}/recipes`);
+            const encodedMenu = encodeURIComponent(menu);
+            console.log(`/users/${encodedMenu}/recipes`);
+            const response = await apiAuthClient.get(
+              `/users/${encodedMenu}/recipes`
+            );
             setRecipes(response.data.data);
           }
         } else {
@@ -39,7 +53,7 @@ export default function Recipes(props: { disableCustomTheme?: boolean }) {
     };
 
     fetchRecipes();
-  }, [isAuthenticated, menu, setRecipes, setMenus]);
+  }, [isAuthenticated, menu, setRecipes]); // Fetch recipes whenever menu changes
 
   return (
     <AppTheme {...props}>
