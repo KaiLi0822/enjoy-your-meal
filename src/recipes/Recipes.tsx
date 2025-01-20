@@ -1,48 +1,54 @@
-import CssBaseline from '@mui/material/CssBaseline';
-import Container from '@mui/material/Container';
-import AppAppBar from './components/AppAppBar';
-import MainContent from './components/MainContent';
-import Footer from './components/Footer';
-import AppTheme from '../shared-theme/AppTheme';
-import { useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import React from "react";
+import CssBaseline from "@mui/material/CssBaseline";
+import Container from "@mui/material/Container";
+import AppAppBar from "./components/AppAppBar";
+import MainContent from "./components/MainContent";
+import Footer from "./components/Footer";
+import AppTheme from "../shared-theme/AppTheme";
 import { useAuthContext } from "../contexts/AuthContext";
-import { refreshToken } from "../utils/authUtils";
+import { apiAuthClient, apiClient } from "../utils/apiClients";
 
 export default function Recipes(props: { disableCustomTheme?: boolean }) {
-  const location = useLocation();
-  const { setIsAuthenticated } = useAuthContext(); // Get setIsAuthenticated from AuthContext
-  useEffect(() => {
-    const auth = location.state?.auth || false;
+  const { isAuthenticated, menu, setRecipes, setMenus } = useAuthContext(); // Access setIsAuthenticated from context
 
-    if (auth) {
-      setIsAuthenticated(true);
-    } else {
-      // Check access token
-      const token = sessionStorage.getItem("accessToken");
-
-      if (token) {
-        setIsAuthenticated(true);
-      } else {
-        // Explicitly refresh token
-        refreshToken().then((newToken) => {
-          setIsAuthenticated(!!newToken); // Set as authenticated if token refresh succeeds
-        });
+  React.useEffect(() => {
+    console.log("Recipes-useEffect");
+    const fetchRecipes = async () => {
+      // Add a loading to cover the await time
+      try {
+        if (isAuthenticated) {
+          const response = await apiAuthClient.get("/users/menus");
+          setMenus(response.data.data);
+          if (menu === "") {
+            console.log("menu is default.")
+            const response = await apiAuthClient.get("/users/recipes");
+            setRecipes(response.data.data);
+          } else {
+            const encodedMenu = encodeURIComponent(menu)
+            console.log(`/users/${encodedMenu}/recipes`)
+            const response = await apiAuthClient.get(`/users/${encodedMenu}/recipes`);
+            setRecipes(response.data.data);
+          }
+        } else {
+          const response = await apiClient.get("/recipes");
+          setRecipes(response.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching recipes:", error);
       }
-    }
-  }, [location.state, setIsAuthenticated]);
+    };
 
+    fetchRecipes();
+  }, [isAuthenticated, menu, setRecipes, setMenus]);
 
   return (
-   
     <AppTheme {...props}>
       <CssBaseline enableColorScheme />
-
       <AppAppBar />
       <Container
         maxWidth="lg"
         component="main"
-        sx={{ display: 'flex', flexDirection: 'column', my: 16, gap: 4 }}
+        sx={{ display: "flex", flexDirection: "column", my: 16, gap: 4 }}
       >
         <MainContent />
       </Container>

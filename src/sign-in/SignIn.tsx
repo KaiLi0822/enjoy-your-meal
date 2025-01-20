@@ -20,6 +20,7 @@ import ColorModeSelect from '../shared-theme/ColorModeSelect';
 import RamenDiningIcon from '@mui/icons-material/RamenDining';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useAuthContext } from '../contexts/AuthContext';
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -71,6 +72,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
   const [open, setOpen] = React.useState(false);
   const [rememberMe, setRememberMe] = React.useState(false);
   const navigate = useNavigate();
+  const { setIsAuthenticated } = useAuthContext(); 
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -97,12 +99,12 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
       requestBody,
       { withCredentials: true }
     );
-
     if (response.status === 200) {
-      const { accessToken } = response.data;
+      const accessToken  = response.data.data;
       // Store session details in sessionStorage
       sessionStorage.setItem('accessToken', accessToken);
-      navigate('/', { state: { auth: true } });
+      setIsAuthenticated(true);
+      navigate('/');
     } else {
       alert(response.data.message || 'Failed to sign in.');
     }

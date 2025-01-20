@@ -1,9 +1,17 @@
 import React, { createContext, useContext, useState } from "react";
+import { Recipe } from "../types/recipe";
+import { Menu } from "../types/menu";
 
-// Define the context and its type
+// Define the context type
 interface AuthContextProps {
-  isAuthenticated: boolean;
-  setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>;
+  isAuthenticated: boolean, // Allow undefined state
+  setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>,
+  recipes: Recipe[],
+  setRecipes: React.Dispatch<React.SetStateAction<Recipe[]>>,
+  menu: string,
+  setMenu: React.Dispatch<React.SetStateAction<string>>,
+  menus: Menu[],
+  setMenus: React.Dispatch<React.SetStateAction<Menu[]>>,
 }
 
 // Create the context
@@ -20,10 +28,24 @@ export const useAuthContext = () => {
 
 // Provider component
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [menu, setMenu] = useState<string>("");
+  const [menus, setMenus] = useState<Menu[]>([]);
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, setIsAuthenticated }}>
+    <AuthContext.Provider
+      value={{
+        isAuthenticated,
+        setIsAuthenticated,
+        recipes,
+        setRecipes,
+        menu,
+        setMenu,
+        menus,
+        setMenus,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

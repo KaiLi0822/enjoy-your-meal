@@ -4,7 +4,6 @@ import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import CardMedia from "@mui/material/CardMedia";
-import Chip from "@mui/material/Chip";
 import Grid from "@mui/material/Grid2";
 import FormControl from "@mui/material/FormControl";
 import InputAdornment from "@mui/material/InputAdornment";
@@ -19,10 +18,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import CardActions from "@mui/material/CardActions";
 import Collapse from "@mui/material/Collapse";
 import CardHeader from "@mui/material/CardHeader";
-import { useEffect, useState } from "react";
-import { Recipe } from "../../types/recipe";
 import { useAuthContext } from "../../contexts/AuthContext";
-import {apiAuthClient, apiClient} from "../../utils/apiClients";
 
 export function Search() {
   return (
@@ -60,39 +56,9 @@ const ExpandMore = styled((props: ExpandMoreProps) => {
 }));
 
 export default function MainContent() {
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = React.useState(false);
   const [expandRecipe, setExpandRecipe] = React.useState("");
-  const { isAuthenticated } = useAuthContext();
-
-  useEffect(() => {
-    const fetchRecipes = async () => {
-      setLoading(true);
-      try {
-        if (isAuthenticated) {
-          const response = await apiAuthClient.get("/users/recipes");
-          setRecipes(response.data.data);
-        } else {
-          const response = await apiClient.get("/recipes");
-          setRecipes(response.data.data);
-        }
-      } catch (error) {
-        console.error("Error fetching recipes:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchRecipes();
-  }, [isAuthenticated]);
-
-  const handleClick = () => {
-    console.info("You clicked the filter chip.");
-  };
-
-
-
+  const { recipes } = useAuthContext(); 
   const handleExpandClick = (recipeId: string) => {
     setExpanded(!expanded);
     setExpandRecipe(recipeId);
@@ -129,52 +95,6 @@ export default function MainContent() {
       >
         <Box
           sx={{
-            display: "inline-flex",
-            flexDirection: "row",
-            gap: 3,
-            overflow: "auto",
-          }}
-        >
-          <Chip onClick={handleClick} size="medium" label="All categories" />
-          <Chip
-            onClick={handleClick}
-            size="medium"
-            label="Company"
-            sx={{
-              backgroundColor: "transparent",
-              border: "none",
-            }}
-          />
-          <Chip
-            onClick={handleClick}
-            size="medium"
-            label="Product"
-            sx={{
-              backgroundColor: "transparent",
-              border: "none",
-            }}
-          />
-          <Chip
-            onClick={handleClick}
-            size="medium"
-            label="Design"
-            sx={{
-              backgroundColor: "transparent",
-              border: "none",
-            }}
-          />
-          <Chip
-            onClick={handleClick}
-            size="medium"
-            label="Engineering"
-            sx={{
-              backgroundColor: "transparent",
-              border: "none",
-            }}
-          />
-        </Box>
-        <Box
-          sx={{
             display: { xs: "none", sm: "flex" },
             flexDirection: "row",
             gap: 1,
@@ -185,9 +105,7 @@ export default function MainContent() {
           <Search />
         </Box>
       </Box>
-      {loading ? (
-        <p>Loading...</p>
-      ) : (
+      
         <Grid container spacing={2} columns={12}>
           {recipes.map((recipe) => (
             <Grid size={{ xs: 12, md: 4 }} key={recipe.SK}>
@@ -254,7 +172,7 @@ export default function MainContent() {
             </Grid>
           ))}
         </Grid>
-      )}
+      
     </Box>
   );
 }

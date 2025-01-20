@@ -11,12 +11,10 @@ export const refreshToken = async (): Promise<string | null> => {
   
       const response = await refreshClient.post("/auth/refresh", {}, { withCredentials: true });
   
-      const newAccessToken = response.data.accessToken;
+      const newAccessToken = response.data.data;
   
       // Store the new access token in sessionStorage
       sessionStorage.setItem("accessToken", newAccessToken);
-  
-      console.log("Access token refreshed successfully");
       return newAccessToken;
     } catch (error) {
       console.error("Failed to refresh token:", error);

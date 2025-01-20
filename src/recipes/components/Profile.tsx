@@ -1,10 +1,61 @@
-import { Box, MenuItem, Select } from "@mui/material";
+import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, List, ListItem, ListItemText, Menu, MenuItem, TextField } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import PersonIcon from "@mui/icons-material/Person";
 import axios from "axios";
+import { useAuthContext } from "../../contexts/AuthContext";
+import { useState, MouseEvent, useEffect } from "react";
+import DeleteIcon from "@mui/icons-material/Delete";
+import AddIcon from "@mui/icons-material/Add";
 
 export const Profile = () => {
   const navigate = useNavigate();
+const { setIsAuthenticated, menus, setMenus } = useAuthContext(); 
+
+
+const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+const [isMenuOpen, setMenuOpen] = useState<boolean>(false);
+const [tempMenus, setTempMenus] = useState<string[]>([]);
+const [newMenuItem, setNewMenuItem] = useState<string>("");
+
+const openMenu = Boolean(anchorEl);
+
+const handleOpenMenu = (event: MouseEvent<HTMLElement>) => {
+  setAnchorEl(event.currentTarget);
+};
+
+const handleCloseMenu = () => {
+  setAnchorEl(null);
+};
+
+const handleOpenMenusDialog = () => {
+  handleCloseMenu();
+  // load menus' name into tempMenus
+  const menuNames = menus.map((menuItem) => {return menuItem.name});
+  setTempMenus(menuNames);
+  setMenuOpen(true);
+};
+
+const handleAddMenuItem = () => {
+  if (newMenuItem.trim()) {
+    setTempMenus((prevMenus) => [...prevMenus, newMenuItem.trim()]);
+    setNewMenuItem("");
+  }
+};
+
+const handleRemoveMenuItem = (index: number) => {
+  setTempMenus((prevMenus) => prevMenus.filter((_, i) => i !== index));
+};
+
+const handleSaveMenus = () => {
+
+  // re
+  setMenus(tempMenus);
+  setMenuOpen(false);
+};
+
+const handleCancel = () => {
+  setMenuOpen(false);
+};
 
   const onLogout = async () => {
     try {
@@ -16,41 +67,68 @@ export const Profile = () => {
         }
       );
       sessionStorage.clear(); // Clear token
-      navigate("/", { state: { auth: false } });
+      setIsAuthenticated(false);
+      navigate("/");
     } catch (error) {
       console.error("Error during logout:", error);
     }
   };
 
+  useEffect(() => {
+    const rootElement = document.getElementById("root");
+    if (rootElement) {
+      if (isMenuOpen) {
+        rootElement.setAttribute("inert", "true");
+      } else {
+        rootElement.removeAttribute("inert");
+      }
+    }
+  }, [isMenuOpen]);
+
   return (
-    <Select
-      value=""
-      onChange={(event) => {
-        if (event.target.value === "logout") {
-          onLogout();
-        }
-      }}
-      displayEmpty
-      renderValue={() => (
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Box
-            sx={{
-              width: 20,
-              height: 20,
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <PersonIcon sx={{ color: "primary.main" }} />
+    <>
+        <IconButton onClick={handleOpenMenu}>
+    <PersonIcon sx={{ color: "primary.main" }} />
+  </IconButton>
+  <Menu anchorEl={anchorEl} open={openMenu} onClose={handleCloseMenu}>
+    <MenuItem onClick={handleOpenMenusDialog}>Menus</MenuItem>
+    <MenuItem onClick={onLogout}>Log out</MenuItem>
+  </Menu>
+    
+  <Dialog open={isMenuOpen} onClose={handleCancel} fullWidth>
+        <DialogTitle>Manage Menus</DialogTitle>
+        <DialogContent>
+          <List>
+            {tempMenus.map((menu, index) => (
+              <ListItem key={index} secondaryAction={
+                <IconButton edge="end" onClick={() => handleRemoveMenuItem(index)}>
+                  <DeleteIcon />
+                </IconButton>
+              }>
+                <ListItemText primary={menu} />
+              </ListItem>
+            ))}
+          </List>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 2 }}>
+            <TextField
+              fullWidth
+              size="small"
+              value={newMenuItem}
+              onChange={(e) => setNewMenuItem(e.target.value)}
+              placeholder="Add new menu"
+            />
+            <IconButton color="primary" onClick={handleAddMenuItem}>
+              <AddIcon />
+            </IconButton>
           </Box>
-        </Box>
-      )}
-      sx={{
-        minWidth: 0,
-        borderRadius: 2,
-      }}
-    >
-      <MenuItem value="logout">Log out</MenuItem>
-    </Select>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancel} color="secondary">Cancel</Button>
+          <Button onClick={handleSaveMenus} variant="contained" color="primary">Save</Button>
+        </DialogActions>
+      </Dialog>
+    </>
+
+   
   );
 };
