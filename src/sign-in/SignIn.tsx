@@ -19,8 +19,8 @@ import AppTheme from '../shared-theme/AppTheme';
 import ColorModeSelect from '../shared-theme/ColorModeSelect';
 import RamenDiningIcon from '@mui/icons-material/RamenDining';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { useAuthContext } from '../contexts/AuthContext';
+import { apiClient } from '../utils/apiClients';
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -95,7 +95,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
       rememberMe: rememberMe
     };
  try {
-    const response = await axios.post('/api/auth/login', 
+    const response = await apiClient.post('/auth/login', 
       requestBody,
       { withCredentials: true }
     );

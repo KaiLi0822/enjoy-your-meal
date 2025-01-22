@@ -15,12 +15,11 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import PersonIcon from "@mui/icons-material/Person";
-import axios from "axios";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { useState, MouseEvent, useEffect } from "react";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
-import { apiAuthClient } from "../../utils/apiClients";
+import { apiAuthClient, apiClient } from "../../utils/apiClients";
 
 export const Profile = () => {
   const navigate = useNavigate();
@@ -99,8 +98,8 @@ export const Profile = () => {
 
   const onLogout = async () => {
     try {
-      await axios.post(
-        "/api/auth/logout",
+      await apiClient.post(
+        "/auth/logout",
         {},
         {
           withCredentials: true, // Ensure cookies are included in the request
