@@ -8,8 +8,8 @@ interface AuthContextProps {
   setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>,
   recipes: Recipe[],
   setRecipes: React.Dispatch<React.SetStateAction<Recipe[]>>,
-  menu: string,
-  setMenu: React.Dispatch<React.SetStateAction<string>>,
+  menu: string | null,
+  setMenu: React.Dispatch<React.SetStateAction<string | null>>,
   menus: Menu[],
   setMenus: React.Dispatch<React.SetStateAction<Menu[]>>,
 }
@@ -30,7 +30,7 @@ export const useAuthContext = () => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [menu, setMenu] = useState<string>("");
+  const [menu, setMenu] = useState<string | null>("");
   const [menus, setMenus] = useState<Menu[]>([]);
 
   return (

@@ -42,8 +42,18 @@ apiAuthClient.interceptors.response.use(
         }
         return apiAuthClient.request(error.config);
       } else {
-        // Handle logout or redirection if token refresh fails
-        window.location.href = "/signin";
+        // Allow user to choose action
+        const userChoice = window.confirm(
+          "Your session has expired. Would you like to sign in again? Click 'OK' to sign in or 'Cancel' to return to the main page."
+        );
+
+        if (userChoice) {
+          // Redirect to sign-in page
+          window.location.href = "/signin";
+        } else {
+          // Redirect to main page
+          window.location.href = "/";
+        }
       }
     }
 

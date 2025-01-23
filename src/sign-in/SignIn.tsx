@@ -19,7 +19,6 @@ import AppTheme from '../shared-theme/AppTheme';
 import ColorModeSelect from '../shared-theme/ColorModeSelect';
 import RamenDiningIcon from '@mui/icons-material/RamenDining';
 import { useNavigate } from 'react-router-dom';
-import { useAuthContext } from '../contexts/AuthContext';
 import { apiClient } from '../utils/apiClients';
 
 const Card = styled(MuiCard)(({ theme }) => ({
@@ -72,7 +71,6 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
   const [open, setOpen] = React.useState(false);
   const [rememberMe, setRememberMe] = React.useState(false);
   const navigate = useNavigate();
-  const { setIsAuthenticated } = useAuthContext(); 
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -103,7 +101,6 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
       const accessToken  = response.data.data;
       // Store session details in sessionStorage
       sessionStorage.setItem('accessToken', accessToken);
-      setIsAuthenticated(true);
       navigate('/');
     } else {
       alert(response.data.message || 'Failed to sign in.');

@@ -28,9 +28,6 @@ export const Menus: React.FC = () => {
         <Typography>Menu</Typography>
       </IconButton>
       <Menu anchorEl={anchorEl} open={openMenu} onClose={handleCloseMenu}>
-        <MenuItem key="default" onClick={() => switchMenu("")}>
-          <Typography>default</Typography>
-        </MenuItem>
         {menus.map((menu: MenuType) => (
           <MenuItem key={menu.SK} onClick={() => switchMenu(menu.SK)}>
             <Typography>{menu.name}</Typography>

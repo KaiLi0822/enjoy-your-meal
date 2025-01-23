@@ -13,7 +13,6 @@ import {
   MenuItem,
   TextField,
 } from "@mui/material";
-import { useNavigate } from "react-router-dom";
 import PersonIcon from "@mui/icons-material/Person";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { useState, MouseEvent, useEffect } from "react";
@@ -22,7 +21,6 @@ import AddIcon from "@mui/icons-material/Add";
 import { apiAuthClient, apiClient } from "../../utils/apiClients";
 
 export const Profile = () => {
-  const navigate = useNavigate();
   const { setIsAuthenticated, menus, setMenus, setMenu } = useAuthContext();
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -107,7 +105,6 @@ export const Profile = () => {
       );
       sessionStorage.clear(); // Clear token
       setIsAuthenticated(false);
-      navigate("/");
     } catch (error) {
       console.error("Error during logout:", error);
     }

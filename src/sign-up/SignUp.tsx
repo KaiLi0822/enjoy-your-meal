@@ -18,7 +18,6 @@ import { GoogleIcon } from "./CustomIcons";
 import ColorModeSelect from "../shared-theme/ColorModeSelect";
 import RamenDiningIcon from "@mui/icons-material/RamenDining";
 import { useNavigate } from "react-router-dom";
-import { useAuthContext } from "../contexts/AuthContext";
 import { apiClient } from "../utils/apiClients";
 import axios from "axios";
 
@@ -71,7 +70,6 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
   const [passwordErrorMessage, setPasswordErrorMessage] = React.useState("");
   const [rememberMe, setRememberMe] = React.useState(false);
   const navigate = useNavigate();
-  const { setIsAuthenticated } = useAuthContext();
   const validateInputs = (email: string, password: string): boolean => {
     let isValid = true;
 
@@ -118,7 +116,6 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
       if (response.status === 200) {
         const { accessToken } = response.data.data;
         sessionStorage.setItem("accessToken", accessToken);
-        setIsAuthenticated(true);
         navigate("/");
       }
     } catch (error) {

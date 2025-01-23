@@ -7,31 +7,68 @@ import Footer from "./components/Footer";
 import AppTheme from "../shared-theme/AppTheme";
 import { useAuthContext } from "../contexts/AuthContext";
 import { apiAuthClient, apiClient } from "../utils/apiClients";
+import { refreshToken } from "../utils/authUtils";
 
 export default function Recipes(props: { disableCustomTheme?: boolean }) {
   const { isAuthenticated, setIsAuthenticated, menu, setRecipes, setMenus } =
     useAuthContext(); // Access setIsAuthenticated from context
   const [loadingAuth, setLoadingAuth] = useState(true); // Track authentication status check
 
+  // Run this effect when I refresh the page to authenticate
   useEffect(() => {
+    console.log("first effect");
     const checkAuthStatus = async () => {
       try {
-        const response = await apiAuthClient.get("/auth/status");
+        const token = sessionStorage.getItem("accessToken");
+        const config = token
+          ? {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          : {};
+  
+        const response = await apiClient.get("/auth/status", config);
+  
         if (response.status === 200) {
           setIsAuthenticated(true); // User is authenticated
         } else {
-          setIsAuthenticated(false); // User is not authenticated
+          throw new Error("Authentication failed, attempting token refresh.");
         }
       } catch (error) {
-        console.error("Error checking authentication status:", error);
-        setIsAuthenticated(false); // Mark as not authenticated in case of error
+        console.error("Initial auth check failed, attempting token refresh:", error);
+  
+        // Attempt to refresh the token
+        try {
+          const newAccessToken = await refreshToken();
+          if (newAccessToken) {
+            // Retry the original request with the new token
+            const retryResponse = await apiClient.get("/auth/status", {
+              headers: {
+                Authorization: `Bearer ${newAccessToken}`,
+              },
+            });
+  
+            if (retryResponse.status === 200) {
+              setIsAuthenticated(true); // User is authenticated
+            } else {
+              setIsAuthenticated(false); // User is not authenticated
+            }
+          } else {
+            setIsAuthenticated(false); // Token refresh failed
+          }
+        } catch (refreshError) {
+          console.error("Token refresh failed:", refreshError);
+          setIsAuthenticated(false); // User is not authenticated
+        }
       } finally {
         setLoadingAuth(false); // Mark authentication check as complete
       }
     };
-
+  
     checkAuthStatus();
   }, [setIsAuthenticated]);
+  
 
   useEffect(() => {
     if (!loadingAuth) {
@@ -49,7 +86,7 @@ export default function Recipes(props: { disableCustomTheme?: boolean }) {
 
       fetchMenus();
     }
-  }, [isAuthenticated, setMenus]); // Fetch menus only when isAuthenticated changes
+  }, [isAuthenticated, loadingAuth, setMenus]); // Fetch menus only when isAuthenticated changes
 
   useEffect(() => {
     if (!loadingAuth) {
@@ -57,7 +94,11 @@ export default function Recipes(props: { disableCustomTheme?: boolean }) {
       const fetchRecipes = async () => {
         try {
           if (isAuthenticated) {
-            if (menu === "") {
+            if ( menu === null) {
+              const response = await apiClient.get("/recipes");
+              setRecipes(response.data.data);
+            }
+            else if (menu === "") {
               console.log("menu is default.");
               const response = await apiAuthClient.get("/users/recipes");
               setRecipes(response.data.data);
@@ -80,7 +121,7 @@ export default function Recipes(props: { disableCustomTheme?: boolean }) {
 
       fetchRecipes();
     }
-  }, [isAuthenticated, menu, setRecipes]); // Fetch recipes whenever menu changes
+  }, [isAuthenticated, loadingAuth, menu, setRecipes]); // Fetch recipes whenever menu changes
 
   return (
     <AppTheme {...props}>

@@ -16,6 +16,7 @@ import { useNavigate } from "react-router-dom";
 import { Profile } from "./Profile";
 import { Menus } from "./Menus";
 import { useAuthContext } from "../../contexts/AuthContext";
+import { Typography } from "@mui/material";
 
 const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   display: "flex",
@@ -34,11 +35,15 @@ const StyledToolbar = styled(Toolbar)(({ theme }) => ({
 export default function AppAppBar() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuthContext();
+  const { isAuthenticated, setMenu } = useAuthContext();
 
   const toggleDrawer = (newOpen: boolean) => () => {
     setOpen(newOpen);
   };
+
+  function getYourRecipes(): void {
+    setMenu("");
+  }
 
   return (
     <AppBar
@@ -60,9 +65,9 @@ export default function AppAppBar() {
             <Button
               color="primary"
               variant="text"
-              onClick={() => navigate("/")}
+              onClick={() => setMenu(null)}
             >
-              Home
+              All Recipes
             </Button>
           </Box>
           <Box
@@ -72,8 +77,13 @@ export default function AppAppBar() {
               alignItems: "center",
             }}
           >
-            { isAuthenticated? (
+            {isAuthenticated ? (
               <>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                  <IconButton onClick={getYourRecipes} sx={{ padding: 1, minWidth: 'fit-content' }}>
+                    <Typography>Your Recipes</Typography>
+                  </IconButton>
+                </Box>
                 <Menus />
                 <Profile />
               </>
@@ -132,6 +142,11 @@ export default function AppAppBar() {
                 </Box>
                 {isAuthenticated ? (
                   <>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                      <IconButton onClick={getYourRecipes}>
+                        <Typography>Your Recipes</Typography>
+                      </IconButton>
+                    </Box>
                     <Menus />
                     <Profile />
                   </>

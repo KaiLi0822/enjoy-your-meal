@@ -29,6 +29,7 @@ import {
 } from "@mui/material";
 import { Recipe } from "../../types/recipe";
 import { apiAuthClient } from "../../utils/apiClients";
+import { useNavigate } from "react-router-dom";
 
 export function Search() {
   return (
@@ -68,7 +69,7 @@ const ExpandMore = styled((props: ExpandMoreProps) => {
 export default function MainContent() {
   const [expanded, setExpanded] = useState(false);
   const [expandRecipe, setExpandRecipe] = useState<string | undefined>("");
-  const { recipes, isAuthenticated, menu } = useAuthContext();
+  const { recipes, isAuthenticated, menu, setRecipes } = useAuthContext();
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [newRecipe, setNewRecipe] = useState<Recipe>({
     name: "",
@@ -78,10 +79,26 @@ export default function MainContent() {
     cover: "",
   });
   const [isCoverUploaded, setIsCoverUploaded] = useState("");
-
-  const handleDialogOpen = () => setDialogOpen(true);
+  const [showSignInPrompt, setShowSignInPrompt] = useState(false);
+  const navigate = useNavigate();
+  const handleDialogOpen = () => {
+    // Show the dialog if isAuth
+    if (isAuthenticated) {
+      setDialogOpen(true);
+    } else {
+      //  Otherwise show a dialog and ask user to sign-in
+      setShowSignInPrompt(true);
+    }
+  };
   const handleDialogClose = () => {
     setDialogOpen(false);
+    setNewRecipe({
+      name: "",
+      description: "",
+      ingredients: [{ name: "", quantity: "" }],
+      methods: [""],
+      cover: "",
+    });
     setIsCoverUploaded("");
   };
 
@@ -159,10 +176,61 @@ export default function MainContent() {
   };
 
   const handleSubmit = async () => {
-    // Logic to save the new recipe (e.g., POST to backend)
-    console.log("Submitting new recipe:", newRecipe);
-    setIsCoverUploaded("");
-    handleDialogClose();
+    try {
+      // Validate required fields
+      const { name, description, ingredients, methods, cover } = newRecipe;
+      if (
+        !name ||
+        !description ||
+        ingredients.length === 0 ||
+        methods.length === 0 ||
+        !cover
+      ) {
+        alert("Please fill out all fields before submitting.");
+        return;
+      }
+
+      // Filter out empty ingredients and methods
+      const cleanedIngredients = ingredients.filter(
+        (ingredient) =>
+          ingredient.name.trim() !== "" && ingredient.quantity.trim() !== ""
+      );
+      const cleanedMethods = methods.filter((method) => method.trim() !== "");
+
+      if (cleanedIngredients.length === 0 || cleanedMethods.length === 0) {
+        alert("Please ensure all ingredients and methods are filled out.");
+        return;
+      }
+
+      // Prepare the request body
+      const requestBody = {
+        name: name.trim(),
+        description: description.trim(),
+        ingredients: cleanedIngredients,
+        methods: cleanedMethods,
+        cover, // Assume this contains the uploaded file URL or name
+      };
+
+      console.log(requestBody);
+      // Send the request to the backend
+      const response = await apiAuthClient.post("/users/recipe", requestBody);
+
+      if (response.status === 201) {
+        alert("Recipe added successfully!");
+        // Optionally, refresh the recipes list if needed
+      } else {
+        alert("Failed to add recipe. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error adding recipe:", error);
+      alert("An unexpected error occurred. Please try again later.");
+    } finally {
+      // Reset the form state and close the dialog
+      setIsCoverUploaded("");
+      handleDialogClose();
+      const response = await apiAuthClient.get("/users/recipes");
+      setRecipes(response.data.data);
+    }
   };
 
   const handleExpandClick = (recipeId: string | undefined) => {
@@ -170,11 +238,21 @@ export default function MainContent() {
     setExpandRecipe(recipeId);
   };
 
+  const handleSignInPromptClose = () => {
+    setShowSignInPrompt(false);
+  };
+
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 4 }}>
       <div>
         <Typography variant="h1" gutterBottom>
-          Enjoy Your Meal
+          {isAuthenticated
+            ? menu === ""
+              ? "Your Recipes"
+              : menu === null
+              ? "Enjoy Your Meal"
+              : menu.replace("menu#", "")
+            : "Enjoy Your Meal"}
         </Typography>
       </div>
       <Box
@@ -211,9 +289,8 @@ export default function MainContent() {
           <Search />
         </Box>
       </Box>
-
       <Grid container spacing={2} columns={12}>
-        {isAuthenticated && menu === "" && (
+        {(!isAuthenticated || menu === "") && (
           <Grid size={{ xs: 12, md: 4 }} key="contributeARecipe">
             <Card
               sx={{
@@ -305,6 +382,22 @@ export default function MainContent() {
             onChange={(e) =>
               setNewRecipe((prev) => ({ ...prev, name: e.target.value }))
             }
+            onBlur={() => {
+              const newName = newRecipe.name;
+
+              // Check if the exact name already exists in the recipes array
+              const nameExists = recipes.some(
+                (recipe) =>
+                  recipe.name.trim().toLowerCase() === newName.toLowerCase()
+              );
+
+              if (nameExists) {
+                alert(
+                  "A recipe with this exact name already exists. Please choose a different name."
+                );
+                setNewRecipe((prev) => ({ ...prev, name: "" })); // Clear the input
+              }
+            }}
           />
 
           {/* Description */}
@@ -421,6 +514,31 @@ export default function MainContent() {
           </Button>
           <Button onClick={handleSubmit} variant="contained" color="primary">
             Save
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog open={showSignInPrompt} onClose={handleSignInPromptClose}>
+        <DialogTitle>Sign In Required</DialogTitle>
+        <DialogContent>
+          <Typography>
+            You need to sign in to contribute a recipe. Please log in to
+            continue.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleSignInPromptClose} color="secondary">
+            Cancel
+          </Button>
+          <Button
+            onClick={() => {
+              handleSignInPromptClose();
+              // Redirect to login page
+              navigate("/signin"); // Replace with your login route
+            }}
+            variant="contained"
+            color="primary"
+          >
+            Sign In
           </Button>
         </DialogActions>
       </Dialog>
