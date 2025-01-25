@@ -31,6 +31,7 @@ import {
 import { Recipe } from "../../types/recipe";
 import { apiAuthClient } from "../../utils/apiClients";
 import { useNavigate } from "react-router-dom";
+import CenteredSnackbar from "./CenteredSnackbar";
 
 export function Search() {
   return (
@@ -89,9 +90,11 @@ export default function MainContent() {
   });
   const [isCoverUploaded, setIsCoverUploaded] = useState("");
   const [showSignInPrompt, setShowSignInPrompt] = useState(false);
-  const navigate = useNavigate();
   const [menuDialogOpen, setMenuDialogOpen] = useState("");
   const [selectedMenus, setSelectedMenus] = useState<string[]>([]);
+  const [setAlertMessageMessage, setAlertMessage] = useState("");
+
+  const navigate = useNavigate();
   const handleDialogOpen = () => {
     // Show the dialog if isAuth
     if (isAuthenticated) {
@@ -182,7 +185,7 @@ export default function MainContent() {
       setIsCoverUploaded(fileName);
     } catch (error) {
       console.error("Error uploading image:", error);
-      alert("Failed to upload image.");
+      setAlertMessage("Failed to upload image.");
     }
   };
 
@@ -197,7 +200,7 @@ export default function MainContent() {
         methods.length === 0 ||
         !cover
       ) {
-        alert("Please fill out all fields before submitting.");
+        setAlertMessage("Please fill out all fields before submitting.");
         return;
       }
 
@@ -209,7 +212,9 @@ export default function MainContent() {
       const cleanedMethods = methods.filter((method) => method.trim() !== "");
 
       if (cleanedIngredients.length === 0 || cleanedMethods.length === 0) {
-        alert("Please ensure all ingredients and methods are filled out.");
+        setAlertMessage(
+          "Please ensure all ingredients and methods are filled out."
+        );
         return;
       }
 
@@ -225,14 +230,14 @@ export default function MainContent() {
       const response = await apiAuthClient.post("/users/recipe", requestBody);
 
       if (response.status === 201) {
-        alert("Recipe added successfully!");
+        setAlertMessage("Recipe added successfully!");
         // Optionally, refresh the recipes list if needed
       } else {
-        alert("Failed to add recipe. Please try again.");
+        setAlertMessage("Failed to add recipe. Please try again.");
       }
     } catch (error) {
       console.error("Error adding recipe:", error);
-      alert("An unexpected error occurred. Please try again later.");
+      setAlertMessage("An unexpected error occurred. Please try again later.");
     } finally {
       // Reset the form state and close the dialog
       setIsCoverUploaded("");
@@ -271,19 +276,21 @@ export default function MainContent() {
         (menu) => !originalMenus.includes(menu)
       );
 
-      for (const menu of filterSelectedMenus){
-        await apiAuthClient.post(`/users/menus/${menu}/recipe/${encodedMenuDialogOpen}`);
+      for (const menu of filterSelectedMenus) {
+        await apiAuthClient.post(
+          `/users/menus/${menu}/recipe/${encodedMenuDialogOpen}`
+        );
       }
-        
-     
-      
+
       // Find menus to remove (in originalMenus but not in selectedMenus)
       const filterOriginalMenus = originalMenus.filter(
         (menu) => !selectedMenus.includes(menu)
       );
 
-      for (const menu of filterOriginalMenus){
-        await apiAuthClient.delete(`/users/menus/${menu}/recipe/${encodedMenuDialogOpen}`);
+      for (const menu of filterOriginalMenus) {
+        await apiAuthClient.delete(
+          `/users/menus/${menu}/recipe/${encodedMenuDialogOpen}`
+        );
       }
 
       // fetch the recipeMenus again
@@ -291,13 +298,12 @@ export default function MainContent() {
       const recipeMenusMap = new Map<string, string[]>(
         Object.entries(response.data.data)
       );
-      
+
       setRecipeMenus(recipeMenusMap);
       setMenuDialogOpen("");
-
     } catch (error) {
       console.error("Failed to save menus:", error);
-      alert("Failed to update menus. Please try again.");
+      setAlertMessage("Failed to update menus. Please try again.");
     }
   };
 
@@ -312,43 +318,22 @@ export default function MainContent() {
   };
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 4 }}>
-      <div>
-        <Typography variant="h1" gutterBottom>
-          {isAuthenticated
-            ? menu === ""
-              ? "Your Recipes"
-              : menu === null
-              ? "Enjoy Your Meal"
-              : menu.replace("menu#", "")
-            : "Enjoy Your Meal"}
-        </Typography>
-      </div>
-      <Box
-        sx={{
-          display: { xs: "flex", sm: "none" },
-          flexDirection: "row",
-          gap: 1,
-          width: { xs: "100%", md: "fit-content" },
-          overflow: "auto",
-        }}
-      >
-        <Search />
-      </Box>
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: { xs: "column-reverse", md: "row" },
-          width: "100%",
-          justifyContent: "space-between",
-          alignItems: { xs: "start", md: "center" },
-          gap: 4,
-          overflow: "auto",
-        }}
-      >
+    <>
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <div>
+          <Typography variant="h1" gutterBottom>
+            {isAuthenticated
+              ? menu === ""
+                ? "Your Recipes"
+                : menu === null
+                ? "Enjoy Your Meal"
+                : menu.replace("menu#", "")
+              : "Enjoy Your Meal"}
+          </Typography>
+        </div>
         <Box
           sx={{
-            display: { xs: "none", sm: "flex" },
+            display: { xs: "flex", sm: "none" },
             flexDirection: "row",
             gap: 1,
             width: { xs: "100%", md: "fit-content" },
@@ -357,295 +342,349 @@ export default function MainContent() {
         >
           <Search />
         </Box>
-      </Box>
-      <Grid container spacing={2} columns={12} >
-        {(!isAuthenticated || menu === "") && (
-          <Grid size={{ xs: 12, md: 4 }} key="contributeARecipe" >
-            <Card
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-              }}
-              
-            >
-              <CardHeader title="Contribute A Recipe" />
-              <CardMedia
-                component="div"
-                sx={{
-                  height: 194,
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-                onClick={handleDialogOpen}
-              >
-                <AddIcon sx={{ fontSize: 80, color: "#9e9e9e" }} />
-              </CardMedia>
-            </Card>
-          </Grid>
-        )}
-        {recipes.map((recipe) => (
-          <Grid size={{ xs: 12, md: 4 }} key={recipe.SK}>
-            <Card>
-              <CardHeader title={recipe.name} />
-              <CardMedia
-                component="img"
-                height="194"
-                image={recipe.cover || "/Image-not-found.png"}
-                alt={recipe.name}
-              />
-              <CardContent>
-                <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                  {recipe.description}
-                </Typography>
-              </CardContent>
-              <CardActions disableSpacing>
-                { (menu === "" || menu === null) &&
-                <IconButton
-                  aria-label="add to favorites"
-                  onClick={() => handleFavoriteClick(recipe.SK)}
-                >
-                  <FavoriteIcon
-                    color={
-                      recipeMenus.has(recipe.SK ?? "") && isAuthenticated
-                        ? "error"
-                        : "inherit"
-                    }
-                  />
-                </IconButton>
-                }
-                <ExpandMore
-                  expand={expanded && recipe.SK === expandRecipe}
-                  onClick={() => handleExpandClick(recipe.SK)}
-                  aria-expanded={expanded}
-                  aria-label="show more"
-                >
-                  <ExpandMoreIcon />
-                </ExpandMore>
-              </CardActions>
-              <Collapse
-                in={expanded && recipe.SK === expandRecipe}
-                timeout="auto"
-                unmountOnExit
-              >
-                <CardContent>
-                  <Typography sx={{ marginBottom: 2 }}>Ingredients:</Typography>
-
-                  {recipe.ingredients.map((ing) => (
-                    <Typography key={ing.name} component="span" display="block">
-                      {ing.name}: {ing.quantity}
-                    </Typography>
-                  ))}
-
-                  <Typography sx={{ marginBottom: 2, marginTop: 2}}>Method:</Typography>
-
-                  {recipe.methods.map((method, index) => (
-                    <Typography key={index} component="span" display="block">
-                      * {method}
-                    </Typography>
-                  ))}
-                </CardContent>
-              </Collapse>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-      <Dialog open={isDialogOpen} onClose={handleDialogClose} fullWidth>
-        <DialogTitle>Add a New Recipe</DialogTitle>
-        <DialogContent>
-          {/* Recipe Name */}
-          <TextField
-            variant="standard"
-            fullWidth
-            label="Recipe Name"
-            value={newRecipe.name}
-            onChange={(e) =>
-              setNewRecipe((prev) => ({ ...prev, name: e.target.value }))
-            }
-            onBlur={() => {
-              const newName = newRecipe.name;
-
-              // Check if the exact name already exists in the recipes array
-              const nameExists = recipes.some(
-                (recipe) =>
-                  recipe.name.trim().toLowerCase() === newName.toLowerCase()
-              );
-
-              if (nameExists) {
-                alert(
-                  "A recipe with this exact name already exists. Please choose a different name."
-                );
-                setNewRecipe((prev) => ({ ...prev, name: "" })); // Clear the input
-              }
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: { xs: "column-reverse", md: "row" },
+            width: "100%",
+            justifyContent: "space-between",
+            alignItems: { xs: "start", md: "center" },
+            gap: 4,
+            overflow: "auto",
+          }}
+        >
+          <Box
+            sx={{
+              display: { xs: "none", sm: "flex" },
+              flexDirection: "row",
+              gap: 1,
+              width: { xs: "100%", md: "fit-content" },
+              overflow: "auto",
             }}
-          />
-
-          {/* Description */}
-          <TextField
-            fullWidth
-            // margin="normal"
-            label="Description"
-            variant="standard"
-            multiline
-            // rows={3}
-            value={newRecipe.description}
-            onChange={(e) =>
-              setNewRecipe((prev) => ({ ...prev, description: e.target.value }))
-            }
-          />
-
-          {/* Ingredients */}
-          <Typography variant="subtitle1" sx={{ mt: 2 }}>
-            Ingredients
-          </Typography>
-          {newRecipe.ingredients.map((ingredient, index) => (
-            <Box key={index} display="flex" gap={2} alignItems="center" mb={1}>
-              <TextField
-                variant="standard"
-                label="Name"
-                value={ingredient.name}
-                onChange={(e) => {
-                  const updatedIngredients = [...newRecipe.ingredients];
-                  updatedIngredients[index].name = e.target.value;
-                  setNewRecipe((prev) => ({
-                    ...prev,
-                    ingredients: updatedIngredients,
-                  }));
-                }}
-              />
-              <TextField
-                variant="standard"
-                label="Quantity"
-                value={ingredient.quantity}
-                onChange={(e) => {
-                  const updatedIngredients = [...newRecipe.ingredients];
-                  updatedIngredients[index].quantity = e.target.value;
-                  setNewRecipe((prev) => ({
-                    ...prev,
-                    ingredients: updatedIngredients,
-                  }));
-                }}
-              />
-              <IconButton
-                color="error"
-                onClick={() => handleRemoveIngredient(index)}
-              >
-                <DeleteIcon />
-              </IconButton>
-            </Box>
-          ))}
-          <Button onClick={handleAddIngredient}>Add Ingredient</Button>
-
-          {/* Methods */}
-          <Typography variant="subtitle1" sx={{ mt: 2 }}>
-            Methods
-          </Typography>
-          {newRecipe.methods.map((method, index) => (
-            <Box key={index} display="flex" gap={2} alignItems="center" mb={1}>
-              <TextField
-                fullWidth
-                variant="standard"
-                label={`Step ${index + 1}`}
-                value={method}
-                onChange={(e) => {
-                  const updatedMethods = [...newRecipe.methods];
-                  updatedMethods[index] = e.target.value;
-                  setNewRecipe((prev) => ({
-                    ...prev,
-                    methods: updatedMethods,
-                  }));
-                }}
-              />
-              <IconButton
-                color="error"
-                onClick={() => handleRemoveMethod(index)}
-              >
-                <DeleteIcon />
-              </IconButton>
-            </Box>
-          ))}
-          <Button onClick={handleAddMethod}>Add Step</Button>
-
-          {/* Cover Upload */}
-          <Typography variant="subtitle1" sx={{ mt: 2 }}>
-            Cover
-          </Typography>
-          <Button variant="outlined" component="label">
-            Upload File
-            <input
-              type="file"
-              hidden
-              accept="image/*"
-              onChange={handleFileChange}
-            />
-          </Button>
-
-          {isCoverUploaded === "loading" ? (
-            <p>Uploading image, please wait...</p>
-          ) : isCoverUploaded !== "" ? (
-            <p>Uploaded: {isCoverUploaded}</p>
-          ) : (
-            <p>No image uploaded yet.</p>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDialogClose} color="secondary">
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} variant="contained" color="primary">
-            Save
-          </Button>
-        </DialogActions>
-      </Dialog>
-      <Dialog open={showSignInPrompt} onClose={handleSignInPromptClose}>
-        <DialogTitle>Sign In Required</DialogTitle>
-        <DialogContent>
-          <Typography>
-            You need to sign in to proceed. Please log in to continue.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleSignInPromptClose} color="secondary">
-            Cancel
-          </Button>
-          <Button
-            onClick={() => {
-              handleSignInPromptClose();
-              // Redirect to login page
-              navigate("/signin"); // Replace with your login route
-            }}
-            variant="contained"
-            color="primary"
           >
-            Sign In
-          </Button>
-        </DialogActions>
-      </Dialog>
-      <Dialog
-        open={menuDialogOpen !== ""}
-        onClose={() => setMenuDialogOpen("")}
-      >
-        <DialogTitle>Select Menus</DialogTitle>
-        <DialogContent>
-          {menus.map((menu) => (
-            <Box key={menu.name} display="flex" alignItems="center" gap={1}>
-              <Checkbox
-                checked={selectedMenus.includes(menu.name)}
-                onChange={() => handleMenuSelectionChange(menu.name)}
-              />
-              <Typography>{menu.name}</Typography>
-            </Box>
+            <Search />
+          </Box>
+        </Box>
+        <Grid container spacing={2} columns={12}>
+          {(!isAuthenticated || menu === "") && (
+            <Grid size={{ xs: 12, md: 4 }} key="contributeARecipe">
+              <Card>
+                <CardHeader title="Contribute A Recipe" />
+                <CardMedia
+                  component="div"
+                  sx={{
+                    height: 274,
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                  onClick={handleDialogOpen}
+                >
+                  <AddIcon sx={{ fontSize: 80, color: "#9e9e9e" }} />
+                </CardMedia>
+              </Card>
+            </Grid>
+          )}
+          {recipes.map((recipe) => (
+            <Grid size={{ xs: 12, md: 4 }} key={recipe.SK}>
+              <Card>
+                <CardHeader title={recipe.name} />
+                <CardMedia
+                  component="img"
+                  height="194"
+                  image={recipe.cover || "/Image-not-found.png"}
+                  alt={recipe.name}
+                />
+                <CardContent
+                  sx={{
+                    height: 40, // Fixed height for consistency
+                    overflow: "auto", // Enable scrolling for overflow
+                  }}
+                >
+                  <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                    {recipe.description}
+                  </Typography>
+                </CardContent>
+                <CardActions disableSpacing>
+                  {(menu === "" || menu === null) && (
+                    <IconButton
+                      aria-label="add to favorites"
+                      onClick={() => handleFavoriteClick(recipe.SK)}
+                    >
+                      <FavoriteIcon
+                        color={
+                          recipeMenus.has(recipe.SK ?? "") && isAuthenticated
+                            ? "error"
+                            : "inherit"
+                        }
+                      />
+                    </IconButton>
+                  )}
+                  <ExpandMore
+                    expand={expanded && recipe.SK === expandRecipe}
+                    onClick={() => handleExpandClick(recipe.SK)}
+                    aria-expanded={expanded}
+                    aria-label="show more"
+                  >
+                    <ExpandMoreIcon />
+                  </ExpandMore>
+                </CardActions>
+                <Collapse
+                  in={expanded && recipe.SK === expandRecipe}
+                  timeout="auto"
+                  unmountOnExit
+                >
+                  <CardContent>
+                    <Typography sx={{ marginBottom: 2 }}>
+                      Ingredients:
+                    </Typography>
+
+                    {recipe.ingredients.map((ing) => (
+                      <Typography
+                        key={ing.name}
+                        component="span"
+                        display="block"
+                      >
+                        {ing.name}: {ing.quantity}
+                      </Typography>
+                    ))}
+
+                    <Typography sx={{ marginBottom: 2, marginTop: 2 }}>
+                      Method:
+                    </Typography>
+
+                    {recipe.methods.map((method, index) => (
+                      <Typography key={index} component="span" display="block">
+                        * {method}
+                      </Typography>
+                    ))}
+                  </CardContent>
+                </Collapse>
+              </Card>
+            </Grid>
           ))}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setMenuDialogOpen("")} color="secondary">
-            Cancel
-          </Button>
-          <Button onClick={handleSaveMenus} variant="contained" color="primary">
-            Save
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+        </Grid>
+        <Dialog open={isDialogOpen} onClose={handleDialogClose} fullWidth>
+          <DialogTitle>Add a New Recipe</DialogTitle>
+          <DialogContent>
+            {/* Recipe Name */}
+            <TextField
+              variant="standard"
+              fullWidth
+              label="Recipe Name"
+              value={newRecipe.name}
+              onChange={(e) =>
+                setNewRecipe((prev) => ({ ...prev, name: e.target.value }))
+              }
+              onBlur={() => {
+                const newName = newRecipe.name;
+
+                // Check if the exact name already exists in the recipes array
+                const nameExists = recipes.some(
+                  (recipe) =>
+                    recipe.name.trim().toLowerCase() === newName.toLowerCase()
+                );
+
+                if (nameExists) {
+                  setAlertMessage(
+                    "A recipe with this exact name already exists. Please choose a different name."
+                  );
+                  setNewRecipe((prev) => ({ ...prev, name: "" })); // Clear the input
+                }
+              }}
+            />
+
+            {/* Description */}
+            <TextField
+              fullWidth
+              // margin="normal"
+              label="Description"
+              variant="standard"
+              multiline
+              // rows={3}
+              value={newRecipe.description}
+              onChange={(e) =>
+                setNewRecipe((prev) => ({
+                  ...prev,
+                  description: e.target.value,
+                }))
+              }
+            />
+
+            {/* Ingredients */}
+            <Typography variant="subtitle1" sx={{ mt: 2 }}>
+              Ingredients
+            </Typography>
+            {newRecipe.ingredients.map((ingredient, index) => (
+              <Box
+                key={index}
+                display="flex"
+                gap={2}
+                alignItems="center"
+                mb={1}
+              >
+                <TextField
+                  variant="standard"
+                  label="Name"
+                  value={ingredient.name}
+                  onChange={(e) => {
+                    const updatedIngredients = [...newRecipe.ingredients];
+                    updatedIngredients[index].name = e.target.value;
+                    setNewRecipe((prev) => ({
+                      ...prev,
+                      ingredients: updatedIngredients,
+                    }));
+                  }}
+                />
+                <TextField
+                  variant="standard"
+                  label="Quantity"
+                  value={ingredient.quantity}
+                  onChange={(e) => {
+                    const updatedIngredients = [...newRecipe.ingredients];
+                    updatedIngredients[index].quantity = e.target.value;
+                    setNewRecipe((prev) => ({
+                      ...prev,
+                      ingredients: updatedIngredients,
+                    }));
+                  }}
+                />
+                <IconButton
+                  color="error"
+                  onClick={() => handleRemoveIngredient(index)}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </Box>
+            ))}
+            <Button onClick={handleAddIngredient}>Add Ingredient</Button>
+
+            {/* Methods */}
+            <Typography variant="subtitle1" sx={{ mt: 2 }}>
+              Methods
+            </Typography>
+            {newRecipe.methods.map((method, index) => (
+              <Box
+                key={index}
+                display="flex"
+                gap={2}
+                alignItems="center"
+                mb={1}
+              >
+                <TextField
+                  fullWidth
+                  variant="standard"
+                  label={`Step ${index + 1}`}
+                  value={method}
+                  onChange={(e) => {
+                    const updatedMethods = [...newRecipe.methods];
+                    updatedMethods[index] = e.target.value;
+                    setNewRecipe((prev) => ({
+                      ...prev,
+                      methods: updatedMethods,
+                    }));
+                  }}
+                />
+                <IconButton
+                  color="error"
+                  onClick={() => handleRemoveMethod(index)}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </Box>
+            ))}
+            <Button onClick={handleAddMethod}>Add Step</Button>
+
+            {/* Cover Upload */}
+            <Typography variant="subtitle1" sx={{ mt: 2 }}>
+              Cover
+            </Typography>
+            <Button variant="outlined" component="label">
+              Upload File
+              <input
+                type="file"
+                hidden
+                accept="image/*"
+                onChange={handleFileChange}
+              />
+            </Button>
+
+            {isCoverUploaded === "loading" ? (
+              <p>Uploading image, please wait...</p>
+            ) : isCoverUploaded !== "" ? (
+              <p>Uploaded: {isCoverUploaded}</p>
+            ) : (
+              <p>No image uploaded yet.</p>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleDialogClose} color="secondary">
+              Cancel
+            </Button>
+            <Button onClick={handleSubmit} variant="contained" color="primary">
+              Save
+            </Button>
+          </DialogActions>
+        </Dialog>
+        <Dialog open={showSignInPrompt} onClose={handleSignInPromptClose}>
+          <DialogTitle>Sign In Required</DialogTitle>
+          <DialogContent>
+            <Typography>
+              You need to sign in to proceed. Please log in to continue.
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleSignInPromptClose} color="secondary">
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                handleSignInPromptClose();
+                // Redirect to login page
+                navigate("/signin"); // Replace with your login route
+              }}
+              variant="contained"
+              color="primary"
+            >
+              Sign In
+            </Button>
+          </DialogActions>
+        </Dialog>
+        <Dialog
+          open={menuDialogOpen !== ""}
+          onClose={() => setMenuDialogOpen("")}
+        >
+          <DialogTitle>Select Menus</DialogTitle>
+          <DialogContent>
+            {menus.map((menu) => (
+              <Box key={menu.name} display="flex" alignItems="center" gap={1}>
+                <Checkbox
+                  checked={selectedMenus.includes(menu.name)}
+                  onChange={() => handleMenuSelectionChange(menu.name)}
+                />
+                <Typography>{menu.name}</Typography>
+              </Box>
+            ))}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setMenuDialogOpen("")} color="secondary">
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveMenus}
+              variant="contained"
+              color="primary"
+            >
+              Save
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+
+      <CenteredSnackbar
+        message={setAlertMessageMessage}
+        onClose={() => setAlertMessage("")}
+      />
+    </>
   );
 }

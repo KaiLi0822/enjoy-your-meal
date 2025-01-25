@@ -1,4 +1,3 @@
-import * as React from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Checkbox from '@mui/material/Checkbox';
@@ -20,6 +19,8 @@ import ColorModeSelect from '../shared-theme/ColorModeSelect';
 import RamenDiningIcon from '@mui/icons-material/RamenDining';
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../utils/apiClients';
+import CenteredSnackbar from '../recipes/components/CenteredSnackbar';
+import { useState } from 'react';
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -64,12 +65,13 @@ const SignInContainer = styled(Stack)(({ theme }) => ({
 }));
 
 export default function SignIn(props: { disableCustomTheme?: boolean }) {
-  const [emailError, setEmailError] = React.useState(false);
-  const [emailErrorMessage, setEmailErrorMessage] = React.useState('');
-  const [passwordError, setPasswordError] = React.useState(false);
-  const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
-  const [open, setOpen] = React.useState(false);
-  const [rememberMe, setRememberMe] = React.useState(false);
+  const [emailError, setEmailError] = useState(false);
+  const [emailErrorMessage, setEmailErrorMessage] = useState('');
+  const [passwordError, setPasswordError] = useState(false);
+  const [passwordErrorMessage, setPasswordErrorMessage] = useState('');
+  const [open, setOpen] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
   const navigate = useNavigate();
 
   const handleClickOpen = () => {
@@ -103,11 +105,11 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
       sessionStorage.setItem('accessToken', accessToken);
       navigate('/');
     } else {
-      alert(response.data.message || 'Failed to sign in.');
+      setAlertMessage(response.data.message || 'Failed to sign in.');
     }
   } catch (error) {
     console.error('Error during sign in:', error);
-    alert('An error occurred during sign in. Please try again.');
+    setAlertMessage('An error occurred during sign in. Please try again.');
   }
   };
 
@@ -139,6 +141,11 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
   };
 
   return (
+    <>
+      <CenteredSnackbar
+        message={alertMessage}
+        onClose={() => setAlertMessage("")}
+      />
     <AppTheme {...props}>
       <CssBaseline enableColorScheme />
       <SignInContainer direction="column" justifyContent="space-between">
@@ -224,7 +231,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
             <Button
               fullWidth
               variant="outlined"
-              onClick={() => alert('Sign in with Google')}
+              onClick={() => setAlertMessage('Sign in with Google')}
               startIcon={<GoogleIcon />}
             >
               Sign in with Google
@@ -243,5 +250,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
         </Card>
       </SignInContainer>
     </AppTheme>
+
+    </>
   );
 }

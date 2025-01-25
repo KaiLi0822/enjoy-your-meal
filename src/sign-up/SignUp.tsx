@@ -1,4 +1,3 @@
-import * as React from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
@@ -20,6 +19,8 @@ import RamenDiningIcon from "@mui/icons-material/RamenDining";
 import { useNavigate } from "react-router-dom";
 import { apiClient } from "../utils/apiClients";
 import axios from "axios";
+import { useState } from "react";
+import CenteredSnackbar from "../recipes/components/CenteredSnackbar";
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: "flex",
@@ -64,11 +65,13 @@ const SignUpContainer = styled(Stack)(({ theme }) => ({
 }));
 
 export default function SignUp(props: { disableCustomTheme?: boolean }) {
-  const [emailError, setEmailError] = React.useState(false);
-  const [emailErrorMessage, setEmailErrorMessage] = React.useState("");
-  const [passwordError, setPasswordError] = React.useState(false);
-  const [passwordErrorMessage, setPasswordErrorMessage] = React.useState("");
-  const [rememberMe, setRememberMe] = React.useState(false);
+  const [emailError, setEmailError] = useState(false);
+  const [emailErrorMessage, setEmailErrorMessage] = useState("");
+  const [passwordError, setPasswordError] = useState(false);
+  const [passwordErrorMessage, setPasswordErrorMessage] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+
   const navigate = useNavigate();
   const validateInputs = (email: string, password: string): boolean => {
     let isValid = true;
@@ -114,113 +117,125 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
       });
 
       if (response.status === 201) {
-        const accessToken  = response.data.data;
+        const accessToken = response.data.data;
         // Store session details in sessionStorage
-        sessionStorage.setItem('accessToken', accessToken);
-        navigate('/');
+        sessionStorage.setItem("accessToken", accessToken);
+        navigate("/");
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
         if (error.response?.status === 409) {
-          alert("Email is already registered.");
+          setAlertMessage("Email is already registered.");
         } else {
-          alert(
+          setAlertMessage(
             error.response?.data?.message ||
               "An error occurred during sign up. Please try again."
           );
         }
       } else {
         console.error("Unexpected error:", error);
-        alert("An unexpected error occurred. Please try again.");
+        setAlertMessage("An unexpected error occurred. Please try again.");
       }
     }
   };
 
   return (
-    <AppTheme {...props}>
-      <CssBaseline enableColorScheme />
-      <ColorModeSelect sx={{ position: "fixed", top: "1rem", right: "1rem" }} />
-      <SignUpContainer direction="column" justifyContent="space-between">
-        <Card variant="outlined">
-          <RamenDiningIcon />
-          <Typography
-            component="h1"
-            variant="h4"
-            sx={{ width: "100%", fontSize: "clamp(2rem, 10vw, 2.15rem)" }}
-          >
-            Sign up
-          </Typography>
-          <Box
-            component="form"
-            onSubmit={handleSubmit}
-            sx={{ display: "flex", flexDirection: "column", gap: 2 }}
-          >
-            <FormControl>
-              <FormLabel htmlFor="email">Email</FormLabel>
-              <TextField
-                required
-                fullWidth
-                id="email"
-                placeholder="your@email.com"
-                name="email"
-                autoComplete="email"
-                variant="outlined"
-                error={emailError}
-                helperText={emailErrorMessage}
-                color={passwordError ? "error" : "primary"}
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel htmlFor="password">Password</FormLabel>
-              <TextField
-                required
-                fullWidth
-                name="password"
-                placeholder="••••••"
-                type="password"
-                id="password"
-                autoComplete="new-password"
-                variant="outlined"
-                error={passwordError}
-                helperText={passwordErrorMessage}
-                color={passwordError ? "error" : "primary"}
-              />
-            </FormControl>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={rememberMe}
-                  color="primary"
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                />
-              }
-              label="Remember Me"
-            />
-            <Button type="submit" fullWidth variant="contained">
-              Sign up
-            </Button>
-          </Box>
-          <Divider>
-            <Typography sx={{ color: "text.secondary" }}>or</Typography>
-          </Divider>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <Button
-              fullWidth
-              variant="outlined"
-              onClick={() => alert("Sign up with Google")}
-              startIcon={<GoogleIcon />}
+    <>
+      <CenteredSnackbar
+        message={alertMessage}
+        onClose={() => setAlertMessage("")}
+      />
+      <AppTheme {...props}>
+        <CssBaseline enableColorScheme />
+        <ColorModeSelect
+          sx={{ position: "fixed", top: "1rem", right: "1rem" }}
+        />
+        <SignUpContainer direction="column" justifyContent="space-between">
+          <Card variant="outlined">
+            <RamenDiningIcon />
+            <Typography
+              component="h1"
+              variant="h4"
+              sx={{ width: "100%", fontSize: "clamp(2rem, 10vw, 2.15rem)" }}
             >
-              Sign up with Google
-            </Button>
-            <Typography sx={{ textAlign: "center" }}>
-              Already have an account?{" "}
-              <Link href="/signin" variant="body2" sx={{ alignSelf: "center" }}>
-                Sign in
-              </Link>
+              Sign up
             </Typography>
-          </Box>
-        </Card>
-      </SignUpContainer>
-    </AppTheme>
+            <Box
+              component="form"
+              onSubmit={handleSubmit}
+              sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+            >
+              <FormControl>
+                <FormLabel htmlFor="email">Email</FormLabel>
+                <TextField
+                  required
+                  fullWidth
+                  id="email"
+                  placeholder="your@email.com"
+                  name="email"
+                  autoComplete="email"
+                  variant="outlined"
+                  error={emailError}
+                  helperText={emailErrorMessage}
+                  color={passwordError ? "error" : "primary"}
+                />
+              </FormControl>
+              <FormControl>
+                <FormLabel htmlFor="password">Password</FormLabel>
+                <TextField
+                  required
+                  fullWidth
+                  name="password"
+                  placeholder="••••••"
+                  type="password"
+                  id="password"
+                  autoComplete="new-password"
+                  variant="outlined"
+                  error={passwordError}
+                  helperText={passwordErrorMessage}
+                  color={passwordError ? "error" : "primary"}
+                />
+              </FormControl>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={rememberMe}
+                    color="primary"
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                  />
+                }
+                label="Remember Me"
+              />
+              <Button type="submit" fullWidth variant="contained">
+                Sign up
+              </Button>
+            </Box>
+            <Divider>
+              <Typography sx={{ color: "text.secondary" }}>or</Typography>
+            </Divider>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              <Button
+                fullWidth
+                variant="outlined"
+                onClick={() => setAlertMessage("Sign up with Google")}
+                startIcon={<GoogleIcon />}
+              >
+                Sign up with Google
+              </Button>
+              <Typography sx={{ textAlign: "center" }}>
+                Already have an account?{" "}
+                <Link
+                  href="/signin"
+                  variant="body2"
+                  sx={{ alignSelf: "center" }}
+                >
+                  Sign in
+                </Link>
+              </Typography>
+            </Box>
+          </Card>
+        </SignUpContainer>
+      </AppTheme>
+    </>
   );
 }

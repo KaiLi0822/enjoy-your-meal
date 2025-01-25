@@ -1,18 +1,19 @@
 import React, { useState, MouseEvent } from "react";
-import { Box, MenuItem, IconButton, Typography, Menu, Snackbar } from "@mui/material";
+import { Box, MenuItem, IconButton, Typography, Menu } from "@mui/material";
 import { Menu as MenuType } from "../../types/menu";
 import { useAuthContext } from "../../contexts/AuthContext";
+import CenteredSnackbar from "./CenteredSnackbar";
 
 export const Menus: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const { menus, setMenu } = useAuthContext();
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
 
   const openMenu = Boolean(anchorEl);
 
   const handleOpenMenu = (event: MouseEvent<HTMLElement>) => {
     if (!menus || menus.length === 0) {
-      setSnackbarOpen(true); // Trigger the Snackbar
+      setAlertMessage("You don’t have any menus yet. Go to your Profile -> Menus to get started!"); // Trigger the Snackbar
       return;
     }
       setAnchorEl(event.currentTarget);
@@ -31,16 +32,10 @@ export const Menus: React.FC = () => {
 
   return (
     <>
-        <Snackbar
-      open={snackbarOpen}
-      autoHideDuration={3000}
-      onClose={() => setSnackbarOpen(false)}
-      message="You don’t have any menus yet. Go to Profile -> Menus to create your first menu!"
-      anchorOrigin={{
-        vertical: "top", // Position vertically at the center
-        horizontal: "center", // Position horizontally at the center
-      }}
-    />
+     <CenteredSnackbar
+        message={alertMessage}
+        onClose={() => setAlertMessage("")}
+      />
     
     
     

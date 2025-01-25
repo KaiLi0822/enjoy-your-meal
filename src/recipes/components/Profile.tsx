@@ -19,6 +19,7 @@ import { useState, MouseEvent, useEffect } from "react";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import { apiAuthClient, apiClient } from "../../utils/apiClients";
+import CenteredSnackbar from "./CenteredSnackbar";
 
 export const Profile = () => {
   const { setIsAuthenticated, menus, setMenus, setMenu } = useAuthContext();
@@ -27,6 +28,7 @@ export const Profile = () => {
   const [isMenuOpen, setMenuOpen] = useState<boolean>(false);
   const [tempMenus, setTempMenus] = useState<string[]>([]);
   const [newMenuItem, setNewMenuItem] = useState<string>("");
+  const [alertMessage, setAlertMessage] = useState("");
 
   const openMenu = Boolean(anchorEl);
 
@@ -51,7 +53,7 @@ export const Profile = () => {
   const handleAddMenuItem = () => {
     if (newMenuItem.trim()) {
       if (tempMenus.includes(newMenuItem)) {
-        alert("Menu name already exists.");
+        setAlertMessage("Menu name already exists.");
         return;
       }
       setTempMenus((prevMenus) => [...prevMenus, newMenuItem.trim()]);
@@ -86,11 +88,12 @@ export const Profile = () => {
     const response = await apiAuthClient.get("/users/menus");
     setMenus(response.data.data);
     setMenu("");
-
+    setNewMenuItem("")
     setMenuOpen(false);
   };
 
   const handleCancel = () => {
+    setNewMenuItem("")
     setMenuOpen(false);
   };
 
@@ -123,6 +126,10 @@ export const Profile = () => {
 
   return (
     <>
+      <CenteredSnackbar
+        message={alertMessage}
+        onClose={() => setAlertMessage("")}
+      />
       <IconButton onClick={handleOpenMenu}>
         <PersonIcon sx={{ color: "primary.main" }} />
       </IconButton>
