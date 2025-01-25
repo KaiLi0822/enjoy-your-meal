@@ -10,8 +10,14 @@ import { apiAuthClient, apiClient } from "../utils/apiClients";
 import { refreshToken } from "../utils/authUtils";
 
 export default function Recipes(props: { disableCustomTheme?: boolean }) {
-  const { isAuthenticated, setIsAuthenticated, menu, setRecipes, setMenus } =
-    useAuthContext(); // Access setIsAuthenticated from context
+  const {
+    isAuthenticated,
+    setIsAuthenticated,
+    menu,
+    setRecipes,
+    setMenus,
+    setRecipeMenus,
+  } = useAuthContext(); // Access setIsAuthenticated from context
   const [loadingAuth, setLoadingAuth] = useState(true); // Track authentication status check
 
   // Run this effect when I refresh the page to authenticate
@@ -27,17 +33,21 @@ export default function Recipes(props: { disableCustomTheme?: boolean }) {
               },
             }
           : {};
-  
+
+
         const response = await apiClient.get("/auth/status", config);
-  
+
         if (response.status === 200) {
           setIsAuthenticated(true); // User is authenticated
         } else {
           throw new Error("Authentication failed, attempting token refresh.");
         }
       } catch (error) {
-        console.error("Initial auth check failed, attempting token refresh:", error);
-  
+        console.error(
+          "Initial auth check failed, attempting token refresh:",
+          error
+        );
+
         // Attempt to refresh the token
         try {
           const newAccessToken = await refreshToken();
@@ -48,7 +58,7 @@ export default function Recipes(props: { disableCustomTheme?: boolean }) {
                 Authorization: `Bearer ${newAccessToken}`,
               },
             });
-  
+
             if (retryResponse.status === 200) {
               setIsAuthenticated(true); // User is authenticated
             } else {
@@ -65,10 +75,9 @@ export default function Recipes(props: { disableCustomTheme?: boolean }) {
         setLoadingAuth(false); // Mark authentication check as complete
       }
     };
-  
+
     checkAuthStatus();
   }, [setIsAuthenticated]);
-  
 
   useEffect(() => {
     if (!loadingAuth) {
@@ -86,7 +95,7 @@ export default function Recipes(props: { disableCustomTheme?: boolean }) {
 
       fetchMenus();
     }
-  }, [isAuthenticated, loadingAuth, setMenus]); // Fetch menus only when isAuthenticated changes
+  }, [isAuthenticated, loadingAuth, setMenus]);
 
   useEffect(() => {
     if (!loadingAuth) {
@@ -94,20 +103,19 @@ export default function Recipes(props: { disableCustomTheme?: boolean }) {
       const fetchRecipes = async () => {
         try {
           if (isAuthenticated) {
-            if ( menu === null) {
+            if (menu === null) {
               const response = await apiClient.get("/recipes");
               setRecipes(response.data.data);
-            }
-            else if (menu === "") {
+            } else if (menu === "") {
               console.log("menu is default.");
               const response = await apiAuthClient.get("/users/recipes");
               setRecipes(response.data.data);
             } else {
               const encodedMenu = encodeURIComponent(menu);
-              console.log(`/users/${encodedMenu}/recipes`);
               const response = await apiAuthClient.get(
                 `/users/${encodedMenu}/recipes`
               );
+
               setRecipes(response.data.data);
             }
           } else {
@@ -122,6 +130,27 @@ export default function Recipes(props: { disableCustomTheme?: boolean }) {
       fetchRecipes();
     }
   }, [isAuthenticated, loadingAuth, menu, setRecipes]); // Fetch recipes whenever menu changes
+
+  useEffect(() => {
+    if (!loadingAuth) {
+      console.log("Fetching recipeMenus.");
+      const fetchRecipeMenus = async () => {
+        try {
+          if (isAuthenticated) {
+            const response = await apiAuthClient.get("/users/recipeMenus");
+            const recipeMenusMap = new Map<string, string[]>(
+              Object.entries(response.data.data)
+            );
+            setRecipeMenus(recipeMenusMap);
+          }
+        } catch (error) {
+          console.error("Error fetching recipeMenus:", error);
+        }
+      };
+
+      fetchRecipeMenus();
+    }
+  }, [isAuthenticated, loadingAuth, setRecipeMenus]);
 
   return (
     <AppTheme {...props}>

@@ -12,6 +12,8 @@ interface AuthContextProps {
   setMenu: React.Dispatch<React.SetStateAction<string | null>>,
   menus: Menu[],
   setMenus: React.Dispatch<React.SetStateAction<Menu[]>>,
+  recipeMenus: Map<string, string[]>,
+  setRecipeMenus: React.Dispatch<React.SetStateAction<Map<string, string[]>>>,
 }
 
 // Create the context
@@ -32,6 +34,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [menu, setMenu] = useState<string | null>("");
   const [menus, setMenus] = useState<Menu[]>([]);
+  const [recipeMenus, setRecipeMenus] = useState<Map<string, string[]>>(new Map<string, string[]>());
 
   return (
     <AuthContext.Provider
@@ -44,6 +47,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setMenu,
         menus,
         setMenus,
+        recipeMenus,
+        setRecipeMenus
       }}
     >
       {children}

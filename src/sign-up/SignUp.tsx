@@ -113,10 +113,11 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
         withCredentials: true,
       });
 
-      if (response.status === 200) {
-        const { accessToken } = response.data.data;
-        sessionStorage.setItem("accessToken", accessToken);
-        navigate("/");
+      if (response.status === 201) {
+        const accessToken  = response.data.data;
+        // Store session details in sessionStorage
+        sessionStorage.setItem('accessToken', accessToken);
+        navigate('/');
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {

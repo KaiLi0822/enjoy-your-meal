@@ -26,6 +26,7 @@ import {
   TextField,
   Button,
   DialogActions,
+  Checkbox,
 } from "@mui/material";
 import { Recipe } from "../../types/recipe";
 import { apiAuthClient } from "../../utils/apiClients";
@@ -69,7 +70,15 @@ const ExpandMore = styled((props: ExpandMoreProps) => {
 export default function MainContent() {
   const [expanded, setExpanded] = useState(false);
   const [expandRecipe, setExpandRecipe] = useState<string | undefined>("");
-  const { recipes, isAuthenticated, menu, setRecipes } = useAuthContext();
+  const {
+    recipes,
+    isAuthenticated,
+    menu,
+    setRecipes,
+    recipeMenus,
+    menus,
+    setRecipeMenus,
+  } = useAuthContext();
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [newRecipe, setNewRecipe] = useState<Recipe>({
     name: "",
@@ -81,6 +90,8 @@ export default function MainContent() {
   const [isCoverUploaded, setIsCoverUploaded] = useState("");
   const [showSignInPrompt, setShowSignInPrompt] = useState(false);
   const navigate = useNavigate();
+  const [menuDialogOpen, setMenuDialogOpen] = useState("");
+  const [selectedMenus, setSelectedMenus] = useState<string[]>([]);
   const handleDialogOpen = () => {
     // Show the dialog if isAuth
     if (isAuthenticated) {
@@ -210,8 +221,6 @@ export default function MainContent() {
         methods: cleanedMethods,
         cover, // Assume this contains the uploaded file URL or name
       };
-
-      console.log(requestBody);
       // Send the request to the backend
       const response = await apiAuthClient.post("/users/recipe", requestBody);
 
@@ -240,6 +249,66 @@ export default function MainContent() {
 
   const handleSignInPromptClose = () => {
     setShowSignInPrompt(false);
+  };
+
+  const handleMenuSelectionChange = (menu: string) => {
+    if (selectedMenus.includes(menu)) {
+      // Uncheck the menu
+      setSelectedMenus(selectedMenus.filter((item) => item !== menu));
+    } else {
+      // Check the menu
+      setSelectedMenus([...selectedMenus, menu]);
+    }
+  };
+
+  const handleSaveMenus = async () => {
+    try {
+      const originalMenus = recipeMenus.get(menuDialogOpen) || [];
+      const encodedMenuDialogOpen = encodeURIComponent(menuDialogOpen);
+
+      // Find menus to add (in selectedMenus but not in originalMenus)
+      const filterSelectedMenus = selectedMenus.filter(
+        (menu) => !originalMenus.includes(menu)
+      );
+
+      for (const menu of filterSelectedMenus){
+        await apiAuthClient.post(`/users/menus/${menu}/recipe/${encodedMenuDialogOpen}`);
+      }
+        
+     
+      
+      // Find menus to remove (in originalMenus but not in selectedMenus)
+      const filterOriginalMenus = originalMenus.filter(
+        (menu) => !selectedMenus.includes(menu)
+      );
+
+      for (const menu of filterOriginalMenus){
+        await apiAuthClient.delete(`/users/menus/${menu}/recipe/${encodedMenuDialogOpen}`);
+      }
+
+      // fetch the recipeMenus again
+      const response = await apiAuthClient.get("/users/recipeMenus");
+      const recipeMenusMap = new Map<string, string[]>(
+        Object.entries(response.data.data)
+      );
+      
+      setRecipeMenus(recipeMenusMap);
+      setMenuDialogOpen("");
+
+    } catch (error) {
+      console.error("Failed to save menus:", error);
+      alert("Failed to update menus. Please try again.");
+    }
+  };
+
+  const handleFavoriteClick = (recipeId: string | undefined) => {
+    if (!isAuthenticated) {
+      setShowSignInPrompt(true); // Show the sign-in dialog if not authenticated
+      return;
+    }
+    const currentMenus = recipeMenus.get(recipeId ?? "") || [];
+    setSelectedMenus(currentMenus);
+    setMenuDialogOpen(recipeId ?? "");
   };
 
   return (
@@ -289,16 +358,15 @@ export default function MainContent() {
           <Search />
         </Box>
       </Box>
-      <Grid container spacing={2} columns={12}>
+      <Grid container spacing={2} columns={12} >
         {(!isAuthenticated || menu === "") && (
-          <Grid size={{ xs: 12, md: 4 }} key="contributeARecipe">
+          <Grid size={{ xs: 12, md: 4 }} key="contributeARecipe" >
             <Card
               sx={{
                 display: "flex",
                 flexDirection: "column",
-                height: "100%",
               }}
-              onClick={handleDialogOpen}
+              
             >
               <CardHeader title="Contribute A Recipe" />
               <CardMedia
@@ -309,6 +377,7 @@ export default function MainContent() {
                   justifyContent: "center",
                   alignItems: "center",
                 }}
+                onClick={handleDialogOpen}
               >
                 <AddIcon sx={{ fontSize: 80, color: "#9e9e9e" }} />
               </CardMedia>
@@ -331,9 +400,20 @@ export default function MainContent() {
                 </Typography>
               </CardContent>
               <CardActions disableSpacing>
-                <IconButton aria-label="add to favorites">
-                  <FavoriteIcon />
+                { (menu === "" || menu === null) &&
+                <IconButton
+                  aria-label="add to favorites"
+                  onClick={() => handleFavoriteClick(recipe.SK)}
+                >
+                  <FavoriteIcon
+                    color={
+                      recipeMenus.has(recipe.SK ?? "") && isAuthenticated
+                        ? "error"
+                        : "inherit"
+                    }
+                  />
                 </IconButton>
+                }
                 <ExpandMore
                   expand={expanded && recipe.SK === expandRecipe}
                   onClick={() => handleExpandClick(recipe.SK)}
@@ -357,11 +437,11 @@ export default function MainContent() {
                     </Typography>
                   ))}
 
-                  <Typography sx={{ marginBottom: 2 }}>Method:</Typography>
+                  <Typography sx={{ marginBottom: 2, marginTop: 2}}>Method:</Typography>
 
                   {recipe.methods.map((method, index) => (
                     <Typography key={index} component="span" display="block">
-                      {method}
+                      * {method}
                     </Typography>
                   ))}
                 </CardContent>
@@ -521,8 +601,7 @@ export default function MainContent() {
         <DialogTitle>Sign In Required</DialogTitle>
         <DialogContent>
           <Typography>
-            You need to sign in to contribute a recipe. Please log in to
-            continue.
+            You need to sign in to proceed. Please log in to continue.
           </Typography>
         </DialogContent>
         <DialogActions>
@@ -539,6 +618,31 @@ export default function MainContent() {
             color="primary"
           >
             Sign In
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={menuDialogOpen !== ""}
+        onClose={() => setMenuDialogOpen("")}
+      >
+        <DialogTitle>Select Menus</DialogTitle>
+        <DialogContent>
+          {menus.map((menu) => (
+            <Box key={menu.name} display="flex" alignItems="center" gap={1}>
+              <Checkbox
+                checked={selectedMenus.includes(menu.name)}
+                onChange={() => handleMenuSelectionChange(menu.name)}
+              />
+              <Typography>{menu.name}</Typography>
+            </Box>
+          ))}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setMenuDialogOpen("")} color="secondary">
+            Cancel
+          </Button>
+          <Button onClick={handleSaveMenus} variant="contained" color="primary">
+            Save
           </Button>
         </DialogActions>
       </Dialog>
