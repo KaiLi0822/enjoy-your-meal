@@ -156,7 +156,6 @@ export default function MainContent() {
       });
 
       if (response.status === 200) {
-        console.log("File uploaded successfully");
         return response.data.data;
       } else {
         console.error("File upload failed", response);

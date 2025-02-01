@@ -22,7 +22,6 @@ export default function Recipes(props: { disableCustomTheme?: boolean }) {
 
   // Run this effect when I refresh the page to authenticate
   useEffect(() => {
-    console.log("first effect");
     const checkAuthStatus = async () => {
       try {
         const token = sessionStorage.getItem("accessToken");
@@ -81,7 +80,6 @@ export default function Recipes(props: { disableCustomTheme?: boolean }) {
 
   useEffect(() => {
     if (!loadingAuth) {
-      console.log("Fetching menus only once.");
       const fetchMenus = async () => {
         try {
           if (isAuthenticated) {
@@ -99,7 +97,6 @@ export default function Recipes(props: { disableCustomTheme?: boolean }) {
 
   useEffect(() => {
     if (!loadingAuth) {
-      console.log("Fetching recipes.");
       const fetchRecipes = async () => {
         try {
           if (isAuthenticated) {
@@ -107,7 +104,6 @@ export default function Recipes(props: { disableCustomTheme?: boolean }) {
               const response = await apiClient.get("/recipes");
               setRecipes(response.data.data);
             } else if (menu === "") {
-              console.log("menu is default.");
               const response = await apiAuthClient.get("/users/recipes");
               setRecipes(response.data.data);
             } else {
@@ -133,7 +129,6 @@ export default function Recipes(props: { disableCustomTheme?: boolean }) {
 
   useEffect(() => {
     if (!loadingAuth) {
-      console.log("Fetching recipeMenus.");
       const fetchRecipeMenus = async () => {
         try {
           if (isAuthenticated) {
