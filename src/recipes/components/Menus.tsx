@@ -4,7 +4,7 @@ import { Menu as MenuType } from "../../types/menu";
 import { useAuthContext } from "../../contexts/AuthContext";
 import CenteredSnackbar from "./CenteredSnackbar";
 
-export const Menus: React.FC = () => {
+const Menus: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const { menus, setMenu } = useAuthContext();
   const [alertMessage, setAlertMessage] = useState("");
@@ -54,3 +54,6 @@ export const Menus: React.FC = () => {
     </>
   );
 };
+
+
+export default Menus;

@@ -1,13 +1,15 @@
-import { useEffect, useState } from "react";
+import { lazy, useEffect, useState } from "react";
 import CssBaseline from "@mui/material/CssBaseline";
 import Container from "@mui/material/Container";
-import AppAppBar from "./components/AppAppBar";
-import MainContent from "./components/MainContent";
-import Footer from "./components/Footer";
 import AppTheme from "../shared-theme/AppTheme";
 import { useAuthContext } from "../contexts/AuthContext";
 import { apiAuthClient, apiClient } from "../utils/apiClients";
 import { refreshToken } from "../utils/authUtils";
+
+// Lazy loading components
+const AppAppBar = lazy(() => import("./components/AppAppBar"));
+const MainContent = lazy(() => import("./components/MainContent"));
+const Footer = lazy(() => import("./components/Footer"));
 
 export default function Recipes(props: { disableCustomTheme?: boolean }) {
   const {

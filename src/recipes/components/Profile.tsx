@@ -21,7 +21,7 @@ import AddIcon from "@mui/icons-material/Add";
 import { apiAuthClient, apiClient } from "../../utils/apiClients";
 import CenteredSnackbar from "./CenteredSnackbar";
 
-export const Profile = () => {
+const Profile = () => {
   const { setIsAuthenticated, menus, setMenus, setMenu } = useAuthContext();
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -183,3 +183,5 @@ export const Profile = () => {
     </>
   );
 };
+
+export default Profile;

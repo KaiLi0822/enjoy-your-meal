@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { lazy, useState } from "react";
 import { alpha, styled } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import AppBar from "@mui/material/AppBar";
@@ -13,10 +13,13 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import RamenDiningIcon from "@mui/icons-material/RamenDining";
 import ColorModeIconDropdown from "../../shared-theme/ColorModeIconDropdown";
 import { useNavigate } from "react-router-dom";
-import { Profile } from "./Profile";
-import { Menus } from "./Menus";
+// import { Profile } from "./Profile";
+// import { Menus } from "./Menus";
 import { useAuthContext } from "../../contexts/AuthContext";
 import { Typography } from "@mui/material";
+
+const Profile = lazy(() => import("./Profile"));
+const Menus = lazy(() => import("./Menus"));
 
 const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   display: "flex",

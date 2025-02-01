@@ -75,7 +75,8 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
   const navigate = useNavigate();
 
   const handleClickOpen = () => {
-    setOpen(true);
+    // setOpen(true);
+    setAlertMessage("Coming Soon!")
   };
 
   const handleClose = () => {
@@ -231,7 +232,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
             <Button
               fullWidth
               variant="outlined"
-              onClick={() => setAlertMessage('Sign in with Google')}
+              onClick={() => setAlertMessage('Coming Soon!')}
               startIcon={<GoogleIcon />}
             >
               Sign in with Google
