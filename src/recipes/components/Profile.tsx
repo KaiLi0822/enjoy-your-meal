@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import { useAuthContext } from "../../contexts/AuthContext";
-import { useState, MouseEvent, useEffect } from "react";
+import { useState, MouseEvent } from "react";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import { apiAuthClient, apiClient } from "../../utils/apiClients";
@@ -113,17 +113,6 @@ const Profile = () => {
     }
   };
 
-  useEffect(() => {
-    const rootElement = document.getElementById("root");
-    if (rootElement) {
-      if (isMenuOpen) {
-        rootElement.setAttribute("inert", "true");
-      } else {
-        rootElement.removeAttribute("inert");
-      }
-    }
-  }, [isMenuOpen]);
-
   return (
     <>
       <CenteredSnackbar
@@ -138,7 +127,7 @@ const Profile = () => {
         <MenuItem onClick={onLogout}>Log out</MenuItem>
       </Menu>
 
-      <Dialog open={isMenuOpen} onClose={handleCancel} fullWidth>
+      <Dialog open={isMenuOpen} onClose={handleCancel} fullWidth disableRestoreFocus>
         <DialogTitle>Manage Menus</DialogTitle>
         <DialogContent>
           <List>

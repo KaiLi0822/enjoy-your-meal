@@ -463,7 +463,7 @@ export default function MainContent() {
             </Grid>
           ))}
         </Grid>
-        <Dialog open={isDialogOpen} onClose={handleDialogClose} fullWidth>
+        <Dialog open={isDialogOpen} onClose={handleDialogClose} fullWidth disableRestoreFocus>
           <DialogTitle>Add a New Recipe</DialogTitle>
           <DialogContent>
             {/* Recipe Name */}
@@ -625,7 +625,7 @@ export default function MainContent() {
             </Button>
           </DialogActions>
         </Dialog>
-        <Dialog open={showSignInPrompt} onClose={handleSignInPromptClose}>
+        <Dialog open={showSignInPrompt} onClose={handleSignInPromptClose} disableRestoreFocus>
           <DialogTitle>Sign In Required</DialogTitle>
           <DialogContent>
             <Typography>
@@ -652,6 +652,7 @@ export default function MainContent() {
         <Dialog
           open={menuDialogOpen !== ""}
           onClose={() => setMenuDialogOpen("")}
+          disableRestoreFocus
         >
           <DialogTitle>Select Menus</DialogTitle>
           <DialogContent>
